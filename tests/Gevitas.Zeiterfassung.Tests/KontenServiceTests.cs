@@ -63,7 +63,7 @@ public class KontenServiceTests : IDisposable
         Assert.All(tage.Take(4), t => Assert.Equal(0, t.Ergebnis.SollMinuten));
         Assert.Equal(0, tage[3].SaldoKontostand);
         Assert.Equal(-480, tage[4].SaldoKontostand);
-        Assert.Equal(-480, (await service.KontostandAsync(ma.Id)).Saldo);
+        Assert.Equal(-960, (await service.KontostandAsync(ma.Id)).Saldo); // Mo. und der laufende Tag (minutenaktuell)
     }
 
     [Fact]
