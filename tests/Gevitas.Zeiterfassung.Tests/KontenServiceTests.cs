@@ -48,6 +48,25 @@ public class KontenServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Konten_starten_erst_mit_dem_Beginn_der_Zeiterfassung()
+    {
+        using var db = _datenbank.NeuerKontext();
+        var ma = TestDaten.Mitarbeiter("ma");
+        ma.Eintrittsdatum = new DateOnly(2020, 1, 1);         // weit zurückliegender Eintritt
+        ma.ErfassungAb = new DateOnly(2026, 10, 19);           // Montag
+        db.Mitarbeiter.Add(ma);
+        await db.SaveChangesAsync();
+
+        var service = Service(db, new FesteUhr(new DateTime(2026, 10, 20, 12, 0, 0)));
+        var tage = await service.AuswertenAsync(ma.Id, new DateOnly(2026, 10, 15), new DateOnly(2026, 10, 19));
+
+        Assert.All(tage.Take(4), t => Assert.Equal(0, t.Ergebnis.SollMinuten));
+        Assert.Equal(0, tage[3].SaldoKontostand);
+        Assert.Equal(-480, tage[4].SaldoKontostand);
+        Assert.Equal(-480, (await service.KontostandAsync(ma.Id)).Saldo);
+    }
+
+    [Fact]
     public async Task Wochenenden_und_Feiertage_haben_keine_Sollzeit()
     {
         using var db = _datenbank.NeuerKontext();

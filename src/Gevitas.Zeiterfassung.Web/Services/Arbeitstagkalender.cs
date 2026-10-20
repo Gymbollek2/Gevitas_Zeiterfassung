@@ -21,7 +21,7 @@ public sealed class Arbeitstagkalender
     public bool IstFeiertag(DateOnly datum, out string name) => _feiertage.IstFeiertag(datum, out name);
 
     public int SollMinuten(Mitarbeiter mitarbeiter, DateOnly datum) =>
-        datum >= mitarbeiter.Eintrittsdatum && IstArbeitstag(datum) ? mitarbeiter.SollMinutenProTag : 0;
+        datum >= mitarbeiter.Erfassungsbeginn && IstArbeitstag(datum) ? mitarbeiter.SollMinutenProTag : 0;
 
     public int ArbeitstageZwischen(DateOnly von, DateOnly bis)
     {

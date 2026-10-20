@@ -83,9 +83,35 @@ public sealed class DatenbankInitialisierung
     {
         await SpalteSicherstellenAsync("Mitarbeiter", "Design", "TEXT NULL", ct);   // seit 1.1.0
         await SpalteSicherstellenAsync("Mitarbeiter", "Sprache", "TEXT NULL", ct);  // seit 1.1.0
+
+        if (await SpalteSicherstellenAsync("Mitarbeiter", "ErfassungAb", "TEXT NULL", ct)) // seit 1.2.0
+        {
+            await ErfassungsbeginnUebernehmenAsync(ct);
+        }
     }
 
-    private async Task SpalteSicherstellenAsync(string tabelle, string spalte, string definition, CancellationToken ct)
+    /// <summary>
+    /// Einmalig beim Update auf 1.2.0: Der Erfassungsbeginn bestehender Mitarbeitender wird auf den Tag der ersten
+    /// Zeitbuchung gesetzt (ohne Buchungen auf heute). So entstehen keine Minusstunden für Tage vor der Nutzung der Anwendung.
+    /// </summary>
+    private async Task ErfassungsbeginnUebernehmenAsync(CancellationToken ct)
+    {
+        var ersteBuchungen = await _db.Zeitbuchungen.AsNoTracking()
+            .GroupBy(b => b.MitarbeiterId)
+            .Select(g => new { MitarbeiterId = g.Key, Datum = g.Min(b => b.Datum) })
+            .ToDictionaryAsync(x => x.MitarbeiterId, x => x.Datum, ct);
+
+        foreach (var m in await _db.Mitarbeiter.Where(m => m.ErfassungAb == null).ToListAsync(ct))
+        {
+            m.ErfassungAb = ersteBuchungen.TryGetValue(m.Id, out var erste) ? erste : _uhr.Heute;
+            _log.LogInformation("Erfassungsbeginn für {Benutzer} auf {Datum} gesetzt.", m.Benutzername, m.ErfassungAb);
+        }
+
+        await _db.SaveChangesAsync(ct);
+    }
+
+    /// <returns>true, wenn die Spalte neu angelegt wurde.</returns>
+    private async Task<bool> SpalteSicherstellenAsync(string tabelle, string spalte, string definition, CancellationToken ct)
     {
         // Tabellen- und Spaltennamen sind feste Konstanten aus dem Code – keine Benutzereingaben.
         var verbindung = _db.Database.GetDbConnection();
@@ -105,7 +131,10 @@ public sealed class DatenbankInitialisierung
                 befehl.CommandText = $"ALTER TABLE \"{tabelle}\" ADD COLUMN \"{spalte}\" {definition}";
                 await befehl.ExecuteNonQueryAsync(ct);
                 _log.LogInformation("Datenbank aktualisiert: Spalte {Tabelle}.{Spalte} ergänzt.", tabelle, spalte);
+                return true;
             }
+
+            return false;
         }
         finally
         {
@@ -186,6 +215,7 @@ public sealed class DatenbankInitialisierung
             SollMinutenProTag = _optionen.Sollarbeitszeit.StandardMinutenProTag,
             Jahresurlaub = _optionen.Urlaub.StandardJahresurlaub,
             Eintrittsdatum = new DateOnly(_uhr.Heute.Year, 1, 1),
+            ErfassungAb = _uhr.Heute.AddDays(1),
             PasswortAendernErforderlich = true
         };
         admin.PasswortHash = _passwoerter.Hashen(admin, _seed.AdminPasswort);
@@ -218,7 +248,8 @@ public sealed class DatenbankInitialisierung
                 Vorgesetzter = chef,
                 SollMinutenProTag = _optionen.Sollarbeitszeit.StandardMinutenProTag,
                 Jahresurlaub = _optionen.Urlaub.StandardJahresurlaub,
-                Eintrittsdatum = eintritt
+                Eintrittsdatum = eintritt,
+                ErfassungAb = _uhr.Heute
             };
             m.PasswortHash = _passwoerter.Hashen(m, "Demo1234!");
             return m;

@@ -62,14 +62,14 @@ public sealed class KontenService
     }
 
     /// <summary>
-    /// Liefert die Auswertung für jeden Tag im Zeitraum. Die Kontostände werden ab dem Eintrittsdatum
+    /// Liefert die Auswertung für jeden Tag im Zeitraum. Die Kontostände werden ab dem Erfassungsbeginn
     /// fortgeschrieben; Tage in der Zukunft verändern die Konten nicht.
     /// </summary>
     public async Task<List<TagesAuswertung>> AuswertenAsync(int mitarbeiterId, DateOnly von, DateOnly bis, CancellationToken ct = default)
     {
         var mitarbeiter = await _db.Mitarbeiter.AsNoTracking().FirstAsync(m => m.Id == mitarbeiterId, ct);
         var heute = _uhr.Heute;
-        var start = mitarbeiter.Eintrittsdatum < von ? mitarbeiter.Eintrittsdatum : von;
+        var start = mitarbeiter.Erfassungsbeginn < von ? mitarbeiter.Erfassungsbeginn : von;
 
         var buchungen = await _db.Zeitbuchungen.AsNoTracking()
             .Where(b => b.MitarbeiterId == mitarbeiterId && b.Datum >= start && b.Datum <= bis)
@@ -115,12 +115,12 @@ public sealed class KontenService
                 ErlaubtVorRahmen = berechtigung?.ArbeitVorRahmen == true,
                 ErlaubtNachRahmen = berechtigung?.ArbeitNachRahmen == true,
                 OffeneBuchungenBis = datum == heute ? _uhr.UhrzeitMinute : null,
-                IstAbgeschlossen = datum < heute && datum >= mitarbeiter.Eintrittsdatum
+                IstAbgeschlossen = datum < heute && datum >= mitarbeiter.Erfassungsbeginn
             };
             var tag = _berechnung.Berechnen(eingabe);
             var tagesKonto = kontobuchungenNachTag.GetValueOrDefault(datum) ?? new List<Kontobuchung>();
 
-            if (!istZukunft && datum >= mitarbeiter.Eintrittsdatum)
+            if (!istZukunft && datum >= mitarbeiter.Erfassungsbeginn)
             {
                 saldo += tag.SaldoDelta;
                 wegezeit += tag.WegezeitKontoDelta;

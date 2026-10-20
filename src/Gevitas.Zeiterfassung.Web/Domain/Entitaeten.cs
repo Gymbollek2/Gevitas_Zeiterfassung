@@ -23,6 +23,13 @@ public class Mitarbeiter
     public int SollMinutenProTag { get; set; } = 480;
     public int Jahresurlaub { get; set; } = 30;
     public DateOnly Eintrittsdatum { get; set; }
+
+    /// <summary>
+    /// Ab diesem Tag wird die Zeit erfasst (Sollzeit und Kontostände). Verhindert z. B. ein hohes Minus,
+    /// wenn das Eintrittsdatum weit zurückliegt. null = ab Eintrittsdatum.
+    /// </summary>
+    public DateOnly? ErfassungAb { get; set; }
+
     public bool Aktiv { get; set; } = true;
     public bool PasswortAendernErforderlich { get; set; }
     public DateTime? LetzteAnmeldung { get; set; }
@@ -35,6 +42,9 @@ public class Mitarbeiter
 
     /// <summary>Sprache der Oberfläche: de oder en (null = de).</summary>
     public string? Sprache { get; set; }
+
+    /// <summary>Erster Tag, für den Sollzeit und Kontostände berechnet werden (frühestens das Eintrittsdatum).</summary>
+    public DateOnly Erfassungsbeginn => ErfassungAb is { } ab && ab > Eintrittsdatum ? ab : Eintrittsdatum;
 
     public string AnzeigeName => $"{Nachname}, {Vorname}";
     public string VollerName => $"{Vorname} {Nachname}";
