@@ -1,0 +1,54 @@
+@page
+@model Gevitas.Zeiterfassung.Web.Pages.Zeitwirtschaft.GruppenkalenderModel
+@{
+    ViewData["Title"] = "Gruppenkalender";
+    var m = Model.MonatsBeginn;
+}
+<section class="karte">
+    <div class="karte-kopf">
+        <div class="monatsnavigation">
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@GruppenkalenderModel.MonatIso(m.AddMonths(-1))" aria-label="Vormonat">‹</a>
+            <strong>@Zeitformat.Monatsname(m.Month) @m.Year</strong>
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@GruppenkalenderModel.MonatIso(m.AddMonths(1))" aria-label="Folgemonat">›</a>
+        </div>
+        <span class="plakette">@Model.Personen.Count Person(en)</span>
+    </div>
+
+    <div class="tabellen-rahmen">
+        <table class="jahreskalender gruppenkalender">
+            <thead>
+                <tr>
+                    <th class="name">Name</th>
+                    @foreach (var d in Model.Tage)
+                    {
+                        <th class="@(d == Model.Heute ? "heute" : "")" title="@Zeitformat.DatumMitWochentag(d)">@(Zeitformat.Wochentag(d)[..2])<br />@d.Day</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Personen)
+                {
+                    <tr>
+                        <td class="name">@p.AnzeigeName</td>
+                        @foreach (var d in Model.Tage)
+                        {
+                            var abw = Model.AbwesenheitAm(p.Id, d);
+                            var klassen = "zelle"
+                                          + (!Model.IstArbeitstag(d) ? " frei" : "")
+                                          + (abw is not null ? " abwesend" : "")
+                                          + (abw?.Status == AbwesenheitsStatus.Beantragt ? " beantragt" : "")
+                                          + (d == Model.Heute ? " heute" : "");
+                            <td class="@klassen" title="@(abw is null ? "" : "abwesend" + (abw.Status == AbwesenheitsStatus.Beantragt ? " (beantragt)" : ""))"></td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="legende">
+        <span><span class="legende-punkt" style="background:#9fb7d3"></span>abwesend</span>
+        <span><span class="legende-punkt" style="background:repeating-linear-gradient(45deg,#c8d6e8 0 3px,#fff 3px 6px)"></span>beantragt</span>
+        <span><span class="legende-punkt" style="background:#e7ecf3"></span>Wochenende/Feiertag</span>
+        <span>Die Abwesenheitsgründe werden nicht angezeigt.</span>
+    </div>
+</section>

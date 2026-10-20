@@ -10,6 +10,11 @@
     <a class="nav-link" asp-page="/Zeitwirtschaft/Zeitkorrekturen"><svg class="icon"><use href="#i-korrektur" /></svg>Zeitkorrekturen</a>
     <a class="nav-link" asp-page="/Zeitwirtschaft/Monatskalender"><svg class="icon"><use href="#i-kalender" /></svg>Monatskalender</a>
     <a class="nav-link" asp-page="/Zeitwirtschaft/Jahreskalender"><svg class="icon"><use href="#i-kalender" /></svg>Jahreskalender</a>
+    <a class="nav-link" asp-page="/Zeitwirtschaft/Regelverletzungen"><svg class="icon"><use href="#i-warnung" /></svg>Regelverletzungen</a>
+    @if (User.IstFuehrungskraft())
+    {
+        <a class="nav-link" asp-page="/Zeitwirtschaft/Gruppenkalender"><svg class="icon"><use href="#i-team" /></svg>Gruppenkalender</a>
+    }
 
     <span class="nav-gruppe">Anträge</span>
     <a class="nav-link" asp-page="/Antraege/Index" asp-route-sicht="@(offen > 0 ? "Genehmiger" : "Antragsteller")">
@@ -19,6 +24,8 @@
             <span class="zaehler" title="Offene Anträge zur Genehmigung">@offen</span>
         }
     </a>
+
+    <a class="nav-link" asp-page="/Berichte/Index"><svg class="icon"><use href="#i-bericht" /></svg>Berichte</a>
 
     <span class="nav-gruppe">Persönlich</span>
     <a class="nav-link" asp-page="/MeineDaten"><svg class="icon"><use href="#i-person" /></svg>Meine Daten</a>

@@ -36,6 +36,8 @@ public static class DiensteErweiterungen
         services.AddScoped<AntragsService>();
         services.AddScoped<KontobuchungService>();
         services.AddScoped<KalenderService>();
+        services.AddScoped<RegelverletzungService>();
+        services.AddScoped<BerichtService>();
         return services;
     }
 }

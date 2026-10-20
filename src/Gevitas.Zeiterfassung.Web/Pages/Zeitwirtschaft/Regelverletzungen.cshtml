@@ -1,0 +1,98 @@
+@page
+@model Gevitas.Zeiterfassung.Web.Pages.Zeitwirtschaft.RegelverletzungenModel
+@{
+    ViewData["Title"] = "Regelverletzungen";
+    var m = Model.MonatsBeginn;
+    string MonatIso(DateOnly d) => d.ToString("yyyy-MM", System.Globalization.CultureInfo.InvariantCulture);
+}
+<section class="karte">
+    <form method="get" class="filterleiste">
+        <div class="monatsnavigation">
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatIso(m.AddMonths(-1))" asp-route-ma="@Model.Ma" asp-route-mitQuittierten="@Model.MitQuittierten" aria-label="Vormonat">‹</a>
+            <strong>@Zeitformat.Monatsname(m.Month) @m.Year</strong>
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatIso(m.AddMonths(1))" asp-route-ma="@Model.Ma" asp-route-mitQuittierten="@Model.MitQuittierten" aria-label="Folgemonat">›</a>
+        </div>
+        <input type="hidden" name="monat" value="@Model.MonatText" />
+        @if (Model.Personen.Count > 1)
+        {
+            <label class="feld">
+                <span>Mitarbeiter/in</span>
+                <select name="ma" data-auto-absenden>
+                    @foreach (var p in Model.Personen)
+                    {
+                        <option value="@p.Id" selected="@(p.Id == Model.Person.Id)">@p.AnzeigeName</option>
+                    }
+                </select>
+            </label>
+        }
+        <label class="feld">
+            <span>Filter</span>
+            <select name="mitQuittierten" data-auto-absenden>
+                <option value="false" selected="@(!Model.MitQuittierten)">Nicht quittiert</option>
+                <option value="true" selected="@Model.MitQuittierten">Alle</option>
+            </select>
+        </label>
+        <noscript><button type="submit" class="knopf">Anzeigen</button></noscript>
+    </form>
+
+    @if (Model.Liste.Count == 0)
+    {
+        <div class="hinweis hinweis-erfolg">Keine Regelverletzungen im gewählten Zeitraum.</div>
+    }
+    else
+    {
+        <div class="tabellen-rahmen">
+            <table class="tabelle">
+                <thead>
+                    <tr><th>Datum</th><th>Beschreibung</th><th>Info</th><th>Quittiert</th><th class="aktionen">Aktion</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in Model.Liste)
+                    {
+                        <tr>
+                            <td>@Zeitformat.DatumMitWochentag(r.Datum)</td>
+                            <td class="@(r.Quittiert ? "" : "feld-fehler")">@r.Beschreibung</td>
+                            <td>@r.Info</td>
+                            <td>
+                                @if (Model.IstEigene && r.Quittierbar)
+                                {
+                                    <form method="post" asp-page-handler="Quittieren">
+                                        <input type="hidden" name="datum" value="@r.Datum.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" />
+                                        <input type="hidden" name="code" value="@r.Code" />
+                                        <input type="hidden" name="monat" value="@Model.MonatText" />
+                                        <input type="hidden" name="mitQuittierten" value="@Model.MitQuittierten.ToString().ToLowerInvariant()" />
+                                        <input type="hidden" name="quittieren" value="@((!r.Quittiert).ToString().ToLowerInvariant())" />
+                                        <label class="checkbox">
+                                            <input type="checkbox" checked="@r.Quittiert" data-auto-absenden aria-label="Quittieren" />
+                                            @(r.Quittiert ? "Ja" : "Quittieren")
+                                        </label>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span>@(r.Quittiert ? "Ja" : r.Quittierbar ? "Nein" : "Korrektur nötig")</span>
+                                }
+                            </td>
+                            <td class="aktionen">
+                                @if (Model.IstEigene || User.IstPersonal())
+                                {
+                                    <a class="knopf knopf-sekundaer knopf-klein" asp-page="/Zeitwirtschaft/Zeitkorrekturen"
+                                       asp-route-monat="@MonatIso(r.Datum)" asp-route-tag="@r.Datum.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)"
+                                       asp-route-ma="@(Model.IstEigene ? (int?)null : Model.Person.Id)" title="Buchung bearbeiten"><svg class="icon"><use href="#i-korrektur" /></svg>Bearbeiten</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    <p class="feld-hilfe">
+        Hier werden Buchungen mit Besonderheiten angezeigt, z. B. fehlende Buchungen, Arbeitszeit &gt; 10 Std. oder fehlende Gehen-Buchungen.
+        Ist ein Eintrag korrekt, können Sie ihn selbst quittieren. Fehlende Gehen-Buchungen müssen korrigiert werden.
+        @if (User.IstFuehrungskraft())
+        {
+            <span>Als Führungskraft können Sie die Unregelmäßigkeiten Ihrer Mitarbeitenden über die Auswahl einsehen.</span>
+        }
+    </p>
+</section>

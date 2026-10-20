@@ -69,6 +69,13 @@
         }
     });
 
+    // Drucken (Berichte) ohne Inline-Handler
+    document.addEventListener("click", function (e) {
+        if (e.target.closest("[data-drucken]")) {
+            window.print();
+        }
+    });
+
     // Live-Uhr im Terminal
     var uhr = document.querySelector("[data-live-uhr]");
     if (uhr) {

@@ -4,6 +4,15 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.5.0] – 2026-10-20
+
+### Hinzugefügt
+- Regelverletzungen: fehlende Buchungen, fehlende Gehen-Buchung, Arbeitszeit > 10 Std., Arbeit vor/nach Rahmen, Arbeit an Abwesenheitstagen, Saldo-Grenzen und Ruhezeitunterschreitungen
+- Quittieren von Regelverletzungen durch die Mitarbeitenden; Führungskräfte sehen die Unregelmäßigkeiten ihres Teams
+- Berichte 500 Monatsjournal, 539 Saldo-Ampel, 540 Pausenabzug, 542 Urlaubsübersicht, 544 Arbeitszeit größer 10, 546 Ruhezeitverletzungen – mit Druckansicht und CSV-Export
+- Führungskräfte sehen bei Berichten ihrer Mitarbeitenden nur Kontensalden, keine Einzelbuchungen
+- Gruppenkalender für Führungskräfte (Abwesenheiten des Teams ohne Gründe)
+
 ## [0.4.0] – 2026-10-20
 
 ### Hinzugefügt
