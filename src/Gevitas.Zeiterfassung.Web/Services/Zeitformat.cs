@@ -9,11 +9,18 @@ namespace Gevitas.Zeiterfassung.Web.Services;
 public static class Zeitformat
 {
     private static readonly CultureInfo Deutsch = new("de-DE");
+    private static readonly CultureInfo Englisch = new("en-GB");
     private static readonly string[] Wochentage = { "So", "Mo", "Di", "Mi", "Do", "Fr", "Sa" };
+    private static readonly string[] WochentageEn = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
     private static readonly string[] Monate =
     {
         "Januar", "Februar", "März", "April", "Mai", "Juni",
         "Juli", "August", "September", "Oktober", "November", "Dezember"
+    };
+    private static readonly string[] MonateEn =
+    {
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
     };
 
     public static string Dauer(int minuten)
@@ -25,17 +32,20 @@ public static class Zeitformat
 
     public static string Uhrzeit(TimeOnly? zeit) => zeit?.ToString("HH:mm", CultureInfo.InvariantCulture) ?? string.Empty;
 
-    public static string Datum(DateOnly datum) => datum.ToString("dd.MM.yyyy", CultureInfo.InvariantCulture);
+    public static string Datum(DateOnly datum) =>
+        datum.ToString(Texte.IstEnglisch ? "dd/MM/yyyy" : "dd.MM.yyyy", CultureInfo.InvariantCulture);
 
-    public static string DatumMitWochentag(DateOnly datum) => $"{Wochentag(datum)}. {Datum(datum)}";
+    public static string DatumMitWochentag(DateOnly datum) =>
+        Texte.IstEnglisch ? $"{Wochentag(datum)} {Datum(datum)}" : $"{Wochentag(datum)}. {Datum(datum)}";
 
-    public static string Wochentag(DateOnly datum) => Wochentage[(int)datum.DayOfWeek];
+    public static string Wochentag(DateOnly datum) => (Texte.IstEnglisch ? WochentageEn : Wochentage)[(int)datum.DayOfWeek];
 
-    public static string Monatsname(int monat) => Monate[monat - 1];
+    public static string Monatsname(int monat) => (Texte.IstEnglisch ? MonateEn : Monate)[monat - 1];
 
-    public static string Tage(decimal tage) => tage.ToString("0.00", Deutsch);
+    public static string Tage(decimal tage) => tage.ToString("0.00", Texte.IstEnglisch ? Englisch : Deutsch);
 
-    public static string Zeitpunkt(DateTime zeitpunkt) => zeitpunkt.ToString("dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture);
+    public static string Zeitpunkt(DateTime zeitpunkt) =>
+        zeitpunkt.ToString(Texte.IstEnglisch ? "dd/MM/yyyy HH:mm" : "dd.MM.yyyy HH:mm", CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Liest eine Dauer ein. Erlaubt "H:mm", "-H:mm" oder ganze Stunden ("3").

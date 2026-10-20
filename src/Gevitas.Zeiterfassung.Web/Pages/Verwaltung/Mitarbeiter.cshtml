@@ -1,25 +1,25 @@
 @page
 @model Gevitas.Zeiterfassung.Web.Pages.Verwaltung.MitarbeiterModel
 @{
-    ViewData["Title"] = "Mitarbeiterverwaltung";
+    ViewData["Title"] = T("Mitarbeiterverwaltung");
 }
 <section class="karte">
     <div class="karte-kopf">
-        <h2><svg class="icon"><use href="#i-team" /></svg>Mitarbeitende</h2>
-        <a class="knopf" asp-page="/Verwaltung/MitarbeiterBearbeiten"><svg class="icon"><use href="#i-plus" /></svg>Neu anlegen</a>
+        <h2><svg class="icon"><use href="#i-team" /></svg>@T("Mitarbeitende")</h2>
+        <a class="knopf" asp-page="/Verwaltung/MitarbeiterBearbeiten"><svg class="icon"><use href="#i-plus" /></svg>@T("Neu anlegen")</a>
     </div>
     <div class="tabellen-rahmen">
         <table class="tabelle">
             <thead>
                 <tr>
-                    <th>Pers.-Nr.</th>
-                    <th>Name</th>
-                    <th>Benutzer</th>
-                    <th>Rolle</th>
-                    <th>Führungskraft</th>
-                    <th class="zahl">Soll/Tag</th>
-                    <th class="zahl">Urlaub</th>
-                    <th>Status</th>
+                    <th>@T("Pers.-Nr.")</th>
+                    <th>@T("Name")</th>
+                    <th>@T("Benutzer")</th>
+                    <th>@T("Rolle")</th>
+                    <th>@T("Führungskraft")</th>
+                    <th class="zahl">@T("Soll/Tag")</th>
+                    <th class="zahl">@T("Urlaub")</th>
+                    <th>@T("Status")</th>
                     <th></th>
                 </tr>
             </thead>
@@ -37,15 +37,15 @@
                         <td>
                             @if (m.Aktiv)
                             {
-                                <span class="plakette plakette-gruen">Aktiv</span>
+                                <span class="plakette plakette-gruen">@T("Aktiv")</span>
                             }
                             else
                             {
-                                <span class="plakette plakette-grau">Inaktiv</span>
+                                <span class="plakette plakette-grau">@T("Inaktiv")</span>
                             }
                         </td>
                         <td class="aktionen">
-                            <a class="knopf knopf-sekundaer knopf-klein" asp-page="/Verwaltung/MitarbeiterBearbeiten" asp-route-id="@m.Id">Bearbeiten</a>
+                            <a class="knopf knopf-sekundaer knopf-klein" asp-page="/Verwaltung/MitarbeiterBearbeiten" asp-route-id="@m.Id">@T("Bearbeiten")</a>
                         </td>
                     </tr>
                 }

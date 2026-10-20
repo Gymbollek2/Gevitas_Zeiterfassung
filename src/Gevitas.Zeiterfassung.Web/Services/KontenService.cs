@@ -3,6 +3,7 @@ using Gevitas.Zeiterfassung.Web.Domain;
 using Gevitas.Zeiterfassung.Web.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Services;
 
@@ -134,11 +135,11 @@ public sealed class KontenService
             {
                 if (saldo < _saldo.UntergrenzeMinuten)
                 {
-                    tag.Hinweise.Add(new Regelhinweis(Regelcodes.SaldoUnterUntergrenze, "Saldo unterschreitet zulässige Untergrenze"));
+                    tag.Hinweise.Add(new Regelhinweis(Regelcodes.SaldoUnterUntergrenze, T("Saldo unterschreitet zulässige Untergrenze")));
                 }
                 else if (saldo > _saldo.ObergrenzeMinuten)
                 {
-                    tag.Hinweise.Add(new Regelhinweis(Regelcodes.SaldoUeberObergrenze, "Saldo überschreitet zulässige Obergrenze"));
+                    tag.Hinweise.Add(new Regelhinweis(Regelcodes.SaldoUeberObergrenze, T("Saldo überschreitet zulässige Obergrenze")));
                 }
             }
 

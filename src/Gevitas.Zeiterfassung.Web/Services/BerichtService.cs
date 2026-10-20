@@ -3,6 +3,7 @@ using System.Text;
 using Gevitas.Zeiterfassung.Web.Domain;
 using Gevitas.Zeiterfassung.Web.Options;
 using Microsoft.Extensions.Options;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Services;
 
@@ -74,7 +75,7 @@ public sealed class BerichtService
             var e = t.Ergebnis;
             var buchungen = string.Join(", ", t.Buchungen.Select(b =>
                 $"{Zeitformat.Uhrzeit(b.Beginn)}–{(b.Ende is null ? "…" : Zeitformat.Uhrzeit(b.Ende))}{(b.Art == BuchungsArt.Arbeit ? "" : " " + b.Art.Text())}"));
-            var abwesenheit = e.Abwesenheit is null ? t.Feiertag ?? "" : $"{e.Abwesenheit.Code}{(e.Abwesenheit.Genehmigt ? "" : " (beantragt)")}";
+            var abwesenheit = e.Abwesenheit is null ? (t.Feiertag is null ? "" : T(t.Feiertag)) : $"{e.Abwesenheit.Code}{(e.Abwesenheit.Genehmigt ? "" : " " + T("(beantragt)"))}";
             bericht.Zeilen.Add(new BerichtZeile(new[]
             {
                 Zeitformat.DatumMitWochentag(t.Datum),
@@ -94,7 +95,7 @@ public sealed class BerichtService
             }
         }
 
-        bericht.Hinweise.Add($"Summe Soll {Zeitformat.Dauer(soll)} · Summe Ist {Zeitformat.Dauer(ist)} · Differenz {Zeitformat.Dauer(ist - soll)}");
+        bericht.Hinweise.Add(F("Summe Soll {0} · Summe Ist {1} · Differenz {2}", Zeitformat.Dauer(soll), Zeitformat.Dauer(ist), Zeitformat.Dauer(ist - soll)));
         return bericht;
     }
 
@@ -103,8 +104,8 @@ public sealed class BerichtService
         var bericht = new BerichtDaten
         {
             Definition = d,
-            Untertitel = $"Stand {Zeitformat.Zeitpunkt(_uhr.Jetzt)} · {personen.Count} Person(en)",
-            Spalten = new[] { "Ampel", "Name", "Pers.-Nr.", "Gleitzeitsaldo", "Wegezeit", "Sonderarbeitszeit", "Urlaubssaldo" }
+            Untertitel = F("Stand {0} · {1} Person(en)", Zeitformat.Zeitpunkt(_uhr.Jetzt), personen.Count),
+            Spalten = new[] { T("Ampel"), T("Name"), T("Pers.-Nr."), T("Gleitzeitsaldo"), T("Wegezeit"), T("Sonderarbeitszeit"), T("Urlaubssaldo") }
         };
 
         foreach (var p in personen)
@@ -115,7 +116,7 @@ public sealed class BerichtService
             var ampel = betrag >= _optionen.Saldo.AmpelRotAbMinuten ? "rot" : betrag >= _optionen.Saldo.AmpelGelbAbMinuten ? "gelb" : "gruen";
             bericht.Zeilen.Add(new BerichtZeile(new[]
             {
-                ampel switch { "rot" => "Rot", "gelb" => "Gelb", _ => "Grün" },
+                ampel switch { "rot" => T("Rot"), "gelb" => T("Gelb"), _ => T("Grün") },
                 p.AnzeigeName,
                 p.Personalnummer,
                 Zeitformat.Dauer(stand.Saldo),
@@ -125,7 +126,7 @@ public sealed class BerichtService
             }, ampel));
         }
 
-        bericht.Hinweise.Add($"Grün bis ±{Zeitformat.Dauer(_optionen.Saldo.AmpelGelbAbMinuten)} Std., Gelb bis ±{Zeitformat.Dauer(_optionen.Saldo.AmpelRotAbMinuten)} Std., darüber Rot.");
+        bericht.Hinweise.Add(F("Grün bis ±{0} Std., Gelb bis ±{1} Std., darüber Rot.", Zeitformat.Dauer(_optionen.Saldo.AmpelGelbAbMinuten), Zeitformat.Dauer(_optionen.Saldo.AmpelRotAbMinuten)));
         return bericht;
     }
 
@@ -144,7 +145,7 @@ public sealed class BerichtService
             }));
         }
 
-        bericht.Hinweise.Add($"Nach {Zeitformat.Dauer(_optionen.Pausen.Schwelle1Minuten)} Std. mind. {_optionen.Pausen.Pause1Minuten} Min., nach {Zeitformat.Dauer(_optionen.Pausen.Schwelle2Minuten)} Std. mind. {_optionen.Pausen.Pause2Minuten} Min. Pause; Unterbrechungen ab {_optionen.Pausen.MinPauseMinuten} Min. zählen.");
+        bericht.Hinweise.Add(F("Nach {0} Std. mind. {1} Min., nach {2} Std. mind. {3} Min. Pause; Unterbrechungen ab {4} Min. zählen.", Zeitformat.Dauer(_optionen.Pausen.Schwelle1Minuten), _optionen.Pausen.Pause1Minuten, Zeitformat.Dauer(_optionen.Pausen.Schwelle2Minuten), _optionen.Pausen.Pause2Minuten, _optionen.Pausen.MinPauseMinuten));
         return bericht;
     }
 
@@ -154,8 +155,8 @@ public sealed class BerichtService
         var bericht = new BerichtDaten
         {
             Definition = d,
-            Untertitel = $"{p.AnzeigeName} ({p.Personalnummer}) · Jahr {jahr}",
-            Spalten = new[] { "Zeitraum", "Art", "Status", "Urlaubstage" }
+            Untertitel = F("{0} ({1}) · Jahr {2}", p.AnzeigeName, p.Personalnummer, jahr),
+            Spalten = new[] { T("Zeitraum"), T("Art"), T("Status"), T("Urlaubstage") }
         };
 
         var abwesenheiten = await _kalender.AbwesenheitenAsync(new[] { p.Id }, new DateOnly(jahr, 1, 1), new DateOnly(jahr, 12, 31), ct);
@@ -165,14 +166,14 @@ public sealed class BerichtService
             bericht.Zeilen.Add(new BerichtZeile(new[]
             {
                 $"{Zeitformat.Datum(a.Von)} – {Zeitformat.Datum(a.Bis)}",
-                a.Art?.Name ?? a.ArtCode,
+                T(a.Art?.Name ?? a.ArtCode),
                 a.Status.Text(),
                 tage.ToString(CultureInfo.InvariantCulture)
             }));
         }
 
-        bericht.Hinweise.Add($"Anspruch {Zeitformat.Tage(u.Anspruch)} · Übertrag {Zeitformat.Tage(u.Uebertrag)} (Verfall nach {Zeitformat.Datum(u.Verfall)}, verfallen {Zeitformat.Tage(u.UebertragVerfallen)})");
-        bericht.Hinweise.Add($"Genommen {Zeitformat.Tage(u.GenommenBisStichtag)} · Geplant {Zeitformat.Tage(u.GeplantNachStichtag)} · Urlaubssaldo {Zeitformat.Tage(u.Urlaubssaldo)} · Resturlaub (Plan 31.12.) {Zeitformat.Tage(u.ResturlaubPlan)}");
+        bericht.Hinweise.Add(F("Anspruch {0} · Übertrag {1} (Verfall nach {2}, verfallen {3})", Zeitformat.Tage(u.Anspruch), Zeitformat.Tage(u.Uebertrag), Zeitformat.Datum(u.Verfall), Zeitformat.Tage(u.UebertragVerfallen)));
+        bericht.Hinweise.Add(F("Genommen {0} · Geplant {1} · Urlaubssaldo {2} · Resturlaub (Plan 31.12.) {3}", Zeitformat.Tage(u.GenommenBisStichtag), Zeitformat.Tage(u.GeplantNachStichtag), Zeitformat.Tage(u.Urlaubssaldo), Zeitformat.Tage(u.ResturlaubPlan)));
         return bericht;
     }
 
@@ -192,7 +193,7 @@ public sealed class BerichtService
                 Zeitformat.DatumMitWochentag(t.Datum),
                 Zeitformat.Dauer(netto),
                 Zeitformat.Dauer(t.Ergebnis.GekappteMinuten),
-                t.Berechtigung?.ArbeitUeber10Stunden == true ? "Ja" : "Nein"
+                t.Berechtigung?.ArbeitUeber10Stunden == true ? T("Ja") : T("Nein")
             }));
         }
 
@@ -220,7 +221,7 @@ public sealed class BerichtService
             vortag = t;
         }
 
-        bericht.Hinweise.Add($"Mindestruhezeit: {Zeitformat.Dauer(_optionen.MinRuhezeitMinuten)} Std.");
+        bericht.Hinweise.Add(F("Mindestruhezeit: {0} Std.", Zeitformat.Dauer(_optionen.MinRuhezeitMinuten)));
         return bericht;
     }
 
@@ -245,7 +246,7 @@ public sealed class BerichtService
     private static BerichtDaten Neu(BerichtDefinition d, Mitarbeiter p, DateOnly von, DateOnly bis, params string[] spalten) => new()
     {
         Definition = d,
-        Untertitel = $"{p.AnzeigeName} ({p.Personalnummer}) · {Zeitformat.Datum(von)} – {Zeitformat.Datum(bis)}",
-        Spalten = spalten
+        Untertitel = F("{0} ({1}) · {2} – {3}", p.AnzeigeName, p.Personalnummer, Zeitformat.Datum(von), Zeitformat.Datum(bis)),
+        Spalten = spalten.Select(T).ToArray()
     };
 }

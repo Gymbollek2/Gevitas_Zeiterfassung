@@ -4,6 +4,7 @@ using Gevitas.Zeiterfassung.Web.Options;
 using Gevitas.Zeiterfassung.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Pages.Antraege;
 
@@ -54,7 +55,7 @@ public class AbwesenheitModel : AppSeite
     {
         if (Von is null || Bis is null || string.IsNullOrEmpty(Art))
         {
-            ModelState.AddModelError(string.Empty, "Bitte Zeitraum und Art der Abwesenheit angeben (Pflichtfelder).");
+            ModelState.AddModelError(string.Empty, T("Bitte Zeitraum und Art der Abwesenheit angeben (Pflichtfelder)."));
             await LadenAsync();
             return Page();
         }

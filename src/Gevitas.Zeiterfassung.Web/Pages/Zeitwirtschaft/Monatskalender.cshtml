@@ -1,20 +1,20 @@
 @page
 @model Gevitas.Zeiterfassung.Web.Pages.Zeitwirtschaft.MonatskalenderModel
 @{
-    ViewData["Title"] = "Monatskalender";
+    ViewData["Title"] = T("Monatskalender");
     var m = Model.MonatsBeginn;
-    var wochentage = new[] { "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag" };
+    var wochentage = new[] { T("Montag"), T("Dienstag"), T("Mittwoch"), T("Donnerstag"), T("Freitag"), T("Samstag"), T("Sonntag") };
 }
 <section class="karte">
     <div class="karte-kopf">
         <div class="monatsnavigation">
-            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatskalenderModel.MonatIso(m.AddMonths(-1))" aria-label="Vormonat">‹</a>
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatskalenderModel.MonatIso(m.AddMonths(-1))" aria-label="@T("Vormonat")">‹</a>
             <strong>@Zeitformat.Monatsname(m.Month) @m.Year</strong>
-            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatskalenderModel.MonatIso(m.AddMonths(1))" aria-label="Folgemonat">›</a>
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatskalenderModel.MonatIso(m.AddMonths(1))" aria-label="@T("Folgemonat")">›</a>
         </div>
         <div class="knopfleiste">
-            <a class="knopf" asp-page="/Antraege/Abwesenheit" asp-route-zurueck="monat"><svg class="icon"><use href="#i-plus" /></svg>Eintrag hinzufügen</a>
-            <a class="knopf knopf-gefahr" asp-page="/Antraege/AbwesenheitLoeschen"><svg class="icon"><use href="#i-loeschen" /></svg>Eintrag löschen</a>
+            <a class="knopf" asp-page="/Antraege/Abwesenheit" asp-route-zurueck="monat"><svg class="icon"><use href="#i-plus" /></svg>@T("Eintrag hinzufügen")</a>
+            <a class="knopf knopf-gefahr" asp-page="/Antraege/AbwesenheitLoeschen"><svg class="icon"><use href="#i-loeschen" /></svg>@T("Eintrag löschen")</a>
         </div>
     </div>
 
@@ -30,24 +30,24 @@
                           + (!tag.IstArbeitstag ? " frei" : "")
                           + (tag.Datum == Model.Heute ? " heute" : "");
             <div class="@klassen">
-                <a class="tagnummer" asp-page="/Antraege/Abwesenheit" asp-route-von="@MonatskalenderModel.Iso(tag.Datum)" asp-route-bis="@MonatskalenderModel.Iso(tag.Datum)" asp-route-zurueck="monat" title="Abwesenheit für diesen Tag eintragen">@tag.Datum.Day</a>
+                <a class="tagnummer" asp-page="/Antraege/Abwesenheit" asp-route-von="@MonatskalenderModel.Iso(tag.Datum)" asp-route-bis="@MonatskalenderModel.Iso(tag.Datum)" asp-route-zurueck="monat" title="@T("Abwesenheit für diesen Tag eintragen")">@tag.Datum.Day</a>
                 @if (tag.Feiertag is not null)
                 {
-                    <span class="feiertag-name">@tag.Feiertag</span>
+                    <span class="feiertag-name">@T(tag.Feiertag)</span>
                 }
                 @foreach (var a in tag.Abwesenheiten)
                 {
                     var beantragt = a.Status == AbwesenheitsStatus.Beantragt;
-                    <span class="kalender-eintrag @(beantragt ? "beantragt" : "")" style="background-color:@a.Art?.Farbe" title="@a.Art?.Name – @a.Status.Text()">
-                        @(a.Art?.Name + (beantragt ? " (beantragt)" : ""))
+                    <span class="kalender-eintrag @(beantragt ? "beantragt" : "")" style="background-color:@a.Art?.Farbe" title="@T(a.Art?.Name ?? a.ArtCode) – @a.Status.Text()">
+                        @(T(a.Art?.Name ?? a.ArtCode) + (beantragt ? " " + T("(beantragt)") : ""))
                     </span>
                 }
             </div>
         }
     </div>
     <div class="legende">
-        <span><span class="legende-punkt" style="background:#eef2f7;border:1px solid #d6e2f0"></span>Wochenende/Feiertag</span>
-        <span><span class="legende-punkt" style="background:repeating-linear-gradient(45deg,#c8d6e8 0 3px,#fff 3px 6px)"></span>beantragt (noch nicht genehmigt)</span>
-        <span>Klick auf einen Tag öffnet „Abwesenheit eintragen“.</span>
+        <span><span class="legende-punkt" style="background:var(--frei2-bg);border:1px solid var(--rand)"></span>@T("Wochenende/Feiertag")</span>
+        <span><span class="legende-punkt" style="background:repeating-linear-gradient(45deg,var(--streifen-a) 0 3px,var(--streifen-b) 3px 6px)"></span>@T("beantragt (noch nicht genehmigt)")</span>
+        <span>@T("Klick auf einen Tag öffnet „Abwesenheit eintragen“.")</span>
     </div>
 </section>

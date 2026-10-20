@@ -3,6 +3,7 @@ using Gevitas.Zeiterfassung.Web.Domain;
 using Gevitas.Zeiterfassung.Web.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Services;
 
@@ -102,18 +103,18 @@ public sealed class AntragsService
     {
         if (bis < von)
         {
-            return Ergebnis.Fehler("Das Ende darf nicht vor dem Beginn liegen.");
+            return Ergebnis.Fehler(T("Das Ende darf nicht vor dem Beginn liegen."));
         }
 
         if (bis.DayNumber - von.DayNumber > 366)
         {
-            return Ergebnis.Fehler("Eine Abwesenheit darf höchstens ein Jahr umfassen.");
+            return Ergebnis.Fehler(T("Eine Abwesenheit darf höchstens ein Jahr umfassen."));
         }
 
         var art = await _db.Abwesenheitsarten.FirstOrDefaultAsync(a => a.Code == artCode && a.Aktiv, ct);
         if (art is null)
         {
-            return Ergebnis.Fehler("Bitte eine gültige Art der Abwesenheit wählen.");
+            return Ergebnis.Fehler(T("Bitte eine gültige Art der Abwesenheit wählen."));
         }
 
         var mitarbeiter = await _db.Mitarbeiter.FirstAsync(m => m.Id == mitarbeiterId, ct);
@@ -125,7 +126,7 @@ public sealed class AntragsService
         var ueberschneidung = eigene.FirstOrDefault(a => a.Von <= bis && a.Bis >= von);
         if (ueberschneidung is not null)
         {
-            return Ergebnis.Fehler($"Im Zeitraum besteht bereits eine Abwesenheit ({Zeitformat.Datum(ueberschneidung.Von)} – {Zeitformat.Datum(ueberschneidung.Bis)}).");
+            return Ergebnis.Fehler(F("Im Zeitraum besteht bereits eine Abwesenheit ({0} – {1}).", Zeitformat.Datum(ueberschneidung.Von), Zeitformat.Datum(ueberschneidung.Bis)));
         }
 
         if (art.MaxKalendertage is int max)
@@ -133,8 +134,7 @@ public sealed class AntragsService
             var (start, ende) = ZusammenhaengenderZeitraum(eigene.Where(a => a.ArtCode == art.Code).ToList(), von, bis);
             if (ende.DayNumber - start.DayNumber + 1 > max)
             {
-                return Ergebnis.Fehler($"„{art.Name}“ ist für maximal {max} zusammenhängende Kalendertage möglich. " +
-                                       "Längere Arbeitsunfähigkeiten müssen durch eine ärztliche Bescheinigung (eAU) nachgewiesen werden – bitte „Krank mit eAU“ wählen.");
+                return Ergebnis.Fehler(F("„{0}“ ist für maximal {1} zusammenhängende Kalendertage möglich. Längere Arbeitsunfähigkeiten müssen durch eine ärztliche Bescheinigung (eAU) nachgewiesen werden – bitte „Krank mit eAU“ wählen.", T(art.Name), max);
             }
         }
 
@@ -142,7 +142,7 @@ public sealed class AntragsService
         {
             if (_urlaub.UrlaubstageImZeitraum(mitarbeiter, von, bis).Count == 0)
             {
-                return Ergebnis.Fehler("Der Zeitraum enthält keine Arbeitstage.");
+                return Ergebnis.Fehler(T("Der Zeitraum enthält keine Arbeitstage."));
             }
 
             var urlaubsFehler = await _urlaub.PruefenAsync(mitarbeiterId, von, bis, ct);
@@ -167,8 +167,8 @@ public sealed class AntragsService
         var antrag = await AntragAnlegenAsync(mitarbeiter, AntragsArt.Abwesenheit, von, bis, bemerkung, abwesenheit, stufen: 1, ct);
         await _db.SaveChangesAsync(ct);
 
-        var hinweis = art.NachweisErforderlich ? " Bitte reichen Sie den Nachweis (Urkunde) bei der Personalabteilung ein." : string.Empty;
-        return Ergebnis.Ok($"Antrag „{art.Name}“ ({Zeitformat.Datum(von)} – {Zeitformat.Datum(bis)}) wurde an {await GenehmigerNameAsync(antrag.GenehmigerId, ct)} gesendet.{hinweis}");
+        var hinweis = art.NachweisErforderlich ? " " + T("Bitte reichen Sie den Nachweis (Urkunde) bei der Personalabteilung ein.") : string.Empty;
+        return Ergebnis.Ok(F("Antrag „{0}“ ({1} – {2}) wurde an {3} gesendet.{4}", T(art.Name), Zeitformat.Datum(von), Zeitformat.Datum(bis), await GenehmigerNameAsync(antrag.GenehmigerId, ct), hinweis));
     }
 
     public async Task<Ergebnis> AbwesenheitLoeschenAsync(int mitarbeiterId, int abwesenheitId, string? bemerkung, CancellationToken ct = default)
@@ -177,7 +177,7 @@ public sealed class AntragsService
             .FirstOrDefaultAsync(a => a.Id == abwesenheitId && a.MitarbeiterId == mitarbeiterId, ct);
         if (abwesenheit is null)
         {
-            return Ergebnis.Fehler("Die Abwesenheit wurde nicht gefunden.");
+            return Ergebnis.Fehler(T("Die Abwesenheit wurde nicht gefunden."));
         }
 
         if (abwesenheit.Status == AbwesenheitsStatus.Beantragt)
@@ -191,30 +191,30 @@ public sealed class AntragsService
             }
 
             await _db.SaveChangesAsync(ct);
-            return Ergebnis.Ok("Der noch nicht genehmigte Antrag wurde gelöscht und wird der Führungskraft nicht mehr angezeigt.");
+            return Ergebnis.Ok(T("Der noch nicht genehmigte Antrag wurde gelöscht und wird der Führungskraft nicht mehr angezeigt."));
         }
 
         if (abwesenheit.Status != AbwesenheitsStatus.Genehmigt)
         {
-            return Ergebnis.Fehler("Diese Abwesenheit kann nicht mehr gelöscht werden.");
+            return Ergebnis.Fehler(T("Diese Abwesenheit kann nicht mehr gelöscht werden."));
         }
 
         if (await _db.Antraege.AnyAsync(a => a.AbwesenheitId == abwesenheit.Id && a.Art == AntragsArt.AbwesenheitLoeschen && a.Status == AntragsStatus.Offen, ct))
         {
-            return Ergebnis.Fehler("Für diese Abwesenheit wurde bereits eine Löschung beantragt.");
+            return Ergebnis.Fehler(T("Für diese Abwesenheit wurde bereits eine Löschung beantragt."));
         }
 
         var mitarbeiter = await _db.Mitarbeiter.FirstAsync(m => m.Id == mitarbeiterId, ct);
         var loeschantrag = await AntragAnlegenAsync(mitarbeiter, AntragsArt.AbwesenheitLoeschen, abwesenheit.Von, abwesenheit.Bis, bemerkung, abwesenheit, stufen: 1, ct);
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok($"Die Löschung der genehmigten Abwesenheit wurde bei {await GenehmigerNameAsync(loeschantrag.GenehmigerId, ct)} beantragt.");
+        return Ergebnis.Ok(F("Die Löschung der genehmigten Abwesenheit wurde bei {0} beantragt.", await GenehmigerNameAsync(loeschantrag.GenehmigerId, ct)));
     }
 
     public async Task<Ergebnis> TagesfreigabeBeantragenAsync(int mitarbeiterId, DateOnly datum, bool ueber10, bool vorRahmen, bool nachRahmen, string? bemerkung, CancellationToken ct = default)
     {
         if (datum > _uhr.Heute)
         {
-            return Ergebnis.Fehler("Freigaben können nur für bereits geleistete Arbeitstage beantragt werden.");
+            return Ergebnis.Fehler(T("Freigaben können nur für bereits geleistete Arbeitstage beantragt werden."));
         }
 
         var berechtigung = await _db.Tagesberechtigungen.FirstOrDefaultAsync(t => t.MitarbeiterId == mitarbeiterId && t.Datum == datum, ct);
@@ -246,7 +246,7 @@ public sealed class AntragsService
 
         if (arten.Count == 0)
         {
-            return Ergebnis.Fehler("Bitte mindestens eine neue Freigabe auswählen.");
+            return Ergebnis.Fehler(T("Bitte mindestens eine neue Freigabe auswählen."));
         }
 
         foreach (var art in arten)
@@ -255,7 +255,7 @@ public sealed class AntragsService
         }
 
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok("Antrag gestellt. Die Zeiten werden sofort gutgeschrieben und bei Ablehnung wieder abgezogen.");
+        return Ergebnis.Ok(T("Antrag gestellt. Die Zeiten werden sofort gutgeschrieben und bei Ablehnung wieder abgezogen."));
     }
 
     public async Task<Ergebnis> UrlaubsuebertragBeantragenAsync(int mitarbeiterId, string? bemerkung, CancellationToken ct = default)
@@ -265,22 +265,21 @@ public sealed class AntragsService
         var bis = UrlaubOptions.Datum(heute.Year, _optionen.Urlaub.UebertragAntragBis);
         if (heute < von || heute > bis)
         {
-            return Ergebnis.Fehler($"Die Übertragung des Resturlaubs kann nur vom {Zeitformat.Datum(von)} bis {Zeitformat.Datum(bis)} beantragt werden. " +
-                                   $"Danach bitte eine E-Mail an {_optionen.Support.PersonalabteilungEmail} schreiben.");
+            return Ergebnis.Fehler(F("Die Übertragung des Resturlaubs kann nur vom {0} bis {1} beantragt werden. Danach bitte eine E-Mail an {2} schreiben.", Zeitformat.Datum(von), Zeitformat.Datum(bis), _optionen.Support.PersonalabteilungEmail);
         }
 
         var jahresbeginn = new DateOnly(heute.Year, 1, 1);
         if (await _db.Antraege.AnyAsync(a => a.AntragstellerId == mitarbeiterId && a.Art == AntragsArt.UrlaubsUebertrag && a.Von == jahresbeginn
                                               && (a.Status == AntragsStatus.Offen || a.Status == AntragsStatus.Genehmigt), ct))
         {
-            return Ergebnis.Fehler("Für dieses Jahr wurde die Übertragung bereits beantragt.");
+            return Ergebnis.Fehler(T("Für dieses Jahr wurde die Übertragung bereits beantragt."));
         }
 
         var mitarbeiter = await _db.Mitarbeiter.FirstAsync(m => m.Id == mitarbeiterId, ct);
         var verfall = UrlaubOptions.Datum(heute.Year, _optionen.Urlaub.VerlaengerterVerfall);
         await AntragAnlegenAsync(mitarbeiter, AntragsArt.UrlaubsUebertrag, jahresbeginn, verfall, bemerkung, null, stufen: 2, ct);
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok("Der zweistufige Genehmigungsprozess (Führungskraft und Bereichsleitung) wurde gestartet. Sie werden per Benachrichtigung informiert.");
+        return Ergebnis.Ok(T("Der zweistufige Genehmigungsprozess (Führungskraft und Bereichsleitung) wurde gestartet. Sie werden per Benachrichtigung informiert."));
     }
 
     public async Task<Ergebnis> ZurueckziehenAsync(int mitarbeiterId, int antragId, CancellationToken ct = default)
@@ -289,7 +288,7 @@ public sealed class AntragsService
             .FirstOrDefaultAsync(a => a.Id == antragId && a.AntragstellerId == mitarbeiterId, ct);
         if (antrag is null || antrag.Status != AntragsStatus.Offen)
         {
-            return Ergebnis.Fehler("Nur eigene, noch offene Anträge können gelöscht werden.");
+            return Ergebnis.Fehler(T("Nur eigene, noch offene Anträge können gelöscht werden."));
         }
 
         switch (antrag.Art)
@@ -307,7 +306,7 @@ public sealed class AntragsService
         antrag.Status = AntragsStatus.Zurueckgezogen;
         antrag.EntschiedenAm = _uhr.Jetzt;
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok("Der Antrag wurde gelöscht. Er wird der Führungskraft nicht mehr angezeigt.");
+        return Ergebnis.Ok(T("Der Antrag wurde gelöscht. Er wird der Führungskraft nicht mehr angezeigt."));
     }
 
     // ------------------------------------------------------------------
@@ -322,22 +321,22 @@ public sealed class AntragsService
             .FirstOrDefaultAsync(a => a.Id == antragId, ct);
         if (antrag is null)
         {
-            return Ergebnis.Fehler("Der Antrag wurde nicht gefunden.");
+            return Ergebnis.Fehler(T("Der Antrag wurde nicht gefunden."));
         }
 
         if (antrag.Status != AntragsStatus.Offen)
         {
-            return Ergebnis.Fehler("Der Antrag wurde bereits bearbeitet.");
+            return Ergebnis.Fehler(T("Der Antrag wurde bereits bearbeitet."));
         }
 
         if (!DarfEntscheiden(antrag, benutzerId, rolle))
         {
-            return Ergebnis.Fehler("Sie sind für diesen Antrag nicht als Genehmiger hinterlegt.");
+            return Ergebnis.Fehler(T("Sie sind für diesen Antrag nicht als Genehmiger hinterlegt."));
         }
 
         if (!genehmigen && string.IsNullOrWhiteSpace(bemerkung))
         {
-            return Ergebnis.Fehler("Bei einer Ablehnung muss eine Begründung angegeben werden.");
+            return Ergebnis.Fehler(T("Bei einer Ablehnung muss eine Begründung angegeben werden."));
         }
 
         var beschreibung = Beschreibung(antrag);
@@ -350,9 +349,9 @@ public sealed class AntragsService
                 antrag.AntragstellerId, ct);
             antrag.Entscheidungsbemerkung = Bereinigen(bemerkung);
             await BenachrichtigenAsync(antrag.GenehmigerId, "Neuer Antrag zur Genehmigung",
-                $"{antrag.Antragsteller!.VollerName}: {beschreibung} (Stufe {antrag.Stufe} von {antrag.Stufen})", LinkGenehmiger, ct);
+                F("{0}: {1} (Stufe {2} von {3})", antrag.Antragsteller!.VollerName, beschreibung, antrag.Stufe, antrag.Stufen), LinkGenehmiger, ct);
             await _db.SaveChangesAsync(ct);
-            return Ergebnis.Ok($"Stufe {antrag.Stufe - 1} genehmigt – der Antrag wurde an {await GenehmigerNameAsync(antrag.GenehmigerId, ct)} weitergeleitet.");
+            return Ergebnis.Ok(F("Stufe {0} genehmigt – der Antrag wurde an {1} weitergeleitet.", antrag.Stufe - 1, await GenehmigerNameAsync(antrag.GenehmigerId, ct)));
         }
 
         switch (antrag.Art)
@@ -379,12 +378,15 @@ public sealed class AntragsService
         antrag.EntschiedenVonId = benutzerId;
         antrag.EntschiedenAm = _uhr.Jetzt;
 
-        var ergebnisText = genehmigen ? "genehmigt" : "abgelehnt";
-        await BenachrichtigenAsync(antrag.AntragstellerId, $"Antrag {ergebnisText}",
-            $"Ihr Antrag „{beschreibung}“ wurde {ergebnisText}." + (string.IsNullOrWhiteSpace(bemerkung) ? string.Empty : $" Bemerkung: {bemerkung.Trim()}"),
-            LinkEigene, ct);
+        // Titel bleibt als deutscher Schlüssel gespeichert und wird bei der Anzeige übersetzt
+        var titel = genehmigen ? "Antrag genehmigt" : "Antrag abgelehnt";
+        var text = (genehmigen ? F("Ihr Antrag „{0}“ wurde genehmigt.", beschreibung) : F("Ihr Antrag „{0}“ wurde abgelehnt.", beschreibung))
+                   + (string.IsNullOrWhiteSpace(bemerkung) ? string.Empty : " " + F("Bemerkung: {0}", bemerkung.Trim()));
+        await BenachrichtigenAsync(antrag.AntragstellerId, titel, text, LinkEigene, ct);
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok($"Antrag von {antrag.Antragsteller!.VollerName} {ergebnisText}.");
+        return Ergebnis.Ok(genehmigen
+            ? F("Antrag von {0} genehmigt.", antrag.Antragsteller!.VollerName)
+            : F("Antrag von {0} abgelehnt.", antrag.Antragsteller!.VollerName));
     }
 
     public static bool DarfEntscheiden(Antrag antrag, int benutzerId, Rolle rolle) =>
@@ -439,9 +441,9 @@ public sealed class AntragsService
     public static string Beschreibung(Antrag antrag) => antrag.Art switch
     {
         AntragsArt.Abwesenheit or AntragsArt.AbwesenheitLoeschen =>
-            $"{antrag.Art.Text()}: {antrag.Abwesenheit?.Art?.Name ?? antrag.Abwesenheit?.ArtCode} {Zeitformat.Datum(antrag.Von)} – {Zeitformat.Datum(antrag.Bis)}",
-        AntragsArt.UrlaubsUebertrag => $"{antrag.Art.Text()} {antrag.Von.Year} bis {Zeitformat.Datum(antrag.Bis)}",
-        _ => $"{antrag.Art.Text()} am {Zeitformat.Datum(antrag.Von)}"
+            $"{antrag.Art.Text()}: {T(antrag.Abwesenheit?.Art?.Name ?? antrag.Abwesenheit?.ArtCode ?? string.Empty)} {Zeitformat.Datum(antrag.Von)} – {Zeitformat.Datum(antrag.Bis)}",
+        AntragsArt.UrlaubsUebertrag => F("{0} {1} bis {2}", antrag.Art.Text(), antrag.Von.Year, Zeitformat.Datum(antrag.Bis)),
+        _ => F("{0} am {1}", antrag.Art.Text(), Zeitformat.Datum(antrag.Von))
     };
 
     // ------------------------------------------------------------------
@@ -515,11 +517,11 @@ public sealed class AntragsService
     {
         if (genehmigerId is null)
         {
-            return "die Personalabteilung";
+            return T("die Personalabteilung");
         }
 
         var m = await _db.Mitarbeiter.AsNoTracking().FirstOrDefaultAsync(x => x.Id == genehmigerId, ct);
-        return m?.VollerName ?? "die Personalabteilung";
+        return m?.VollerName ?? T("die Personalabteilung");
     }
 
     /// <summary>Erweitert den Zeitraum um direkt angrenzende Abwesenheiten derselben Art.</summary>

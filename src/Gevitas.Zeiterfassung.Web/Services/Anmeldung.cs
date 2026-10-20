@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Services;
 
@@ -56,12 +57,12 @@ public sealed class PasswortService
     {
         if (string.IsNullOrEmpty(passwort) || passwort.Length < _optionen.MinPasswortLaenge)
         {
-            return $"Das Passwort muss mindestens {_optionen.MinPasswortLaenge} Zeichen lang sein.";
+            return F("Das Passwort muss mindestens {0} Zeichen lang sein.", _optionen.MinPasswortLaenge);
         }
 
         if (!passwort.Any(char.IsUpper) || !passwort.Any(char.IsLower) || !passwort.Any(char.IsDigit))
         {
-            return "Das Passwort muss Groß- und Kleinbuchstaben sowie mindestens eine Ziffer enthalten.";
+            return T("Das Passwort muss Groß- und Kleinbuchstaben sowie mindestens eine Ziffer enthalten.");
         }
 
         return null;

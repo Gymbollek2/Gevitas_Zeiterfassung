@@ -198,6 +198,49 @@ public class WebAnwendungTests : IClassFixture<ZeiterfassungFactory>
     }
 
     [Fact]
+    public async Task Anmeldeseite_kann_auf_Englisch_umgestellt_werden()
+    {
+        var client = Client();
+
+        var umschalten = await client.GetAsync("/Account/Anmelden?handler=Sprache&wert=en");
+        Assert.Equal(HttpStatusCode.Redirect, umschalten.StatusCode);
+
+        var seite = await client.GetStringAsync("/Account/Anmelden");
+        Assert.Contains("lang=\"en\"", seite);
+        Assert.Contains("Username or personnel number", seite);
+
+        await AnmeldenAsync(client, "kollegin", "Demo1234!");
+        var dashboard = await client.GetStringAsync("/");
+        Assert.Contains("Clock in or out", dashboard);
+        Assert.Contains("Sign out", dashboard);
+        Assert.DoesNotContain(">Abmelden<", dashboard);
+    }
+
+    [Fact]
+    public async Task Darkmode_wird_umgeschaltet_und_gespeichert()
+    {
+        var client = Client();
+        await AnmeldenAsync(client, "fuehrung", "Demo1234!");
+        var dashboard = await client.GetStringAsync("/");
+        Assert.Contains("data-theme=\"system\"", dashboard);
+        var token = Token.Match(dashboard).Groups[1].Value;
+
+        var antwort = await client.PostAsync("/Einstellungen?handler=Design", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["wert"] = "dunkel",
+            ["zurueck"] = "/",
+            ["__RequestVerificationToken"] = token
+        }));
+        Assert.Equal(HttpStatusCode.Redirect, antwort.StatusCode);
+        Assert.Contains("data-theme=\"dunkel\"", await client.GetStringAsync("/"));
+
+        // Nach erneuter Anmeldung (neuer Browser) wird die gespeicherte Einstellung übernommen
+        var neuerBrowser = Client();
+        await AnmeldenAsync(neuerBrowser, "fuehrung", "Demo1234!");
+        Assert.Contains("data-theme=\"dunkel\"", await neuerBrowser.GetStringAsync("/"));
+    }
+
+    [Fact]
     public async Task Bericht_kann_als_Csv_exportiert_werden()
     {
         var client = Client();

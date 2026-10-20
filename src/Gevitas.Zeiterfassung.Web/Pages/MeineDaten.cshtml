@@ -1,33 +1,33 @@
 @page
 @model MeineDatenModel
 @{
-    ViewData["Title"] = "Meine Daten";
+    ViewData["Title"] = T("Meine Daten");
     var m = Model.Ich;
 }
 <div class="raster raster-2">
     <section class="karte">
-        <h2>Persönliche Daten</h2>
+        <h2>@T("Persönliche Daten")</h2>
         <ul class="detail-liste">
-            <li><span>Name</span><strong>@m.VollerName</strong></li>
-            <li><span>Personalnummer</span><strong>@m.Personalnummer</strong></li>
-            <li><span>Benutzername</span><strong>@m.Benutzername</strong></li>
-            <li><span>E-Mail</span><strong>@m.Email</strong></li>
-            <li><span>Abteilung</span><strong>@(m.Abteilung ?? "–")</strong></li>
-            <li><span>Rolle</span><strong>@m.Rolle.Text()</strong></li>
-            <li><span>Eintrittsdatum</span><strong>@Zeitformat.Datum(m.Eintrittsdatum)</strong></li>
+            <li><span>@T("Name")</span><strong>@m.VollerName</strong></li>
+            <li><span>@T("Personalnummer")</span><strong>@m.Personalnummer</strong></li>
+            <li><span>@T("Benutzername")</span><strong>@m.Benutzername</strong></li>
+            <li><span>@T("E-Mail")</span><strong>@m.Email</strong></li>
+            <li><span>@T("Abteilung")</span><strong>@(m.Abteilung ?? "–")</strong></li>
+            <li><span>@T("Rolle")</span><strong>@m.Rolle.Text()</strong></li>
+            <li><span>@T("Eintrittsdatum")</span><strong>@Zeitformat.Datum(m.Eintrittsdatum)</strong></li>
         </ul>
     </section>
 
     <section class="karte">
-        <h2>Arbeitszeitmodell</h2>
+        <h2>@T("Arbeitszeitmodell")</h2>
         <ul class="detail-liste">
-            <li><span>Sollarbeitszeit pro Tag</span><strong>@Zeitformat.Dauer(m.SollMinutenProTag) Std.</strong></li>
-            <li><span>Jahresurlaub</span><strong>@m.Jahresurlaub Tage</strong></li>
-            <li><span>Disziplinarische Führungskraft</span><strong>@(m.Vorgesetzter?.VollerName ?? "–")</strong></li>
-            <li><span>Abweichender Genehmiger</span><strong>@(m.AbweichenderGenehmiger?.VollerName ?? "–")</strong></li>
-            <li><span>Letzte Anmeldung</span><strong>@(m.LetzteAnmeldung is null ? "–" : Zeitformat.Zeitpunkt(m.LetzteAnmeldung.Value))</strong></li>
+            <li><span>@T("Sollarbeitszeit pro Tag")</span><strong>@Zeitformat.Dauer(m.SollMinutenProTag) @T("Std.")</strong></li>
+            <li><span>@T("Jahresurlaub")</span><strong>@m.Jahresurlaub @T("Tage")</strong></li>
+            <li><span>@T("Disziplinarische Führungskraft")</span><strong>@(m.Vorgesetzter?.VollerName ?? "–")</strong></li>
+            <li><span>@T("Abweichender Genehmiger")</span><strong>@(m.AbweichenderGenehmiger?.VollerName ?? "–")</strong></li>
+            <li><span>@T("Letzte Anmeldung")</span><strong>@(m.LetzteAnmeldung is null ? "–" : Zeitformat.Zeitpunkt(m.LetzteAnmeldung.Value))</strong></li>
         </ul>
-        <p class="feld-hilfe">Als Genehmiger ist automatisch Ihre disziplinarische Führungskraft hinterlegt. Änderungen nimmt die Personalabteilung vor.</p>
-        <a class="knopf knopf-sekundaer" asp-page="/Account/PasswortAendern">Passwort ändern</a>
+        <p class="feld-hilfe">@T("Als Genehmiger ist automatisch Ihre disziplinarische Führungskraft hinterlegt. Änderungen nimmt die Personalabteilung vor.")</p>
+        <a class="knopf knopf-sekundaer" asp-page="/Account/PasswortAendern">@T("Passwort ändern")</a>
     </section>
 </div>

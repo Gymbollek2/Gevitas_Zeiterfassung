@@ -1,6 +1,7 @@
 using Gevitas.Zeiterfassung.Web.Data;
 using Gevitas.Zeiterfassung.Web.Domain;
 using Microsoft.EntityFrameworkCore;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Services;
 
@@ -23,17 +24,17 @@ public sealed class KontobuchungService
     {
         if (quelle is not (Konto.Sonderarbeitszeit or Konto.Wegezeit))
         {
-            return Ergebnis.Fehler("Umbuchungen sind nur vom Sonderarbeitszeit- oder Wegezeitkonto möglich.");
+            return Ergebnis.Fehler(T("Umbuchungen sind nur vom Sonderarbeitszeit- oder Wegezeitkonto möglich."));
         }
 
         if (!Zeitformat.TryParseDauer(stunden, out var minuten) || minuten <= 0)
         {
-            return Ergebnis.Fehler("Bitte den Kontobuchungswert im Format Std:Min angeben (z. B. 2:30).");
+            return Ergebnis.Fehler(T("Bitte den Kontobuchungswert im Format Std:Min angeben (z. B. 2:30)."));
         }
 
         if (datum > _uhr.Heute)
         {
-            return Ergebnis.Fehler("Umbuchungen in der Zukunft sind nicht möglich.");
+            return Ergebnis.Fehler(T("Umbuchungen in der Zukunft sind nicht möglich."));
         }
 
         var vorgang = Guid.NewGuid();
@@ -42,24 +43,24 @@ public sealed class KontobuchungService
             Buchung(mitarbeiterId, datum, quelle, -minuten, text, bemerkung, vorgang, ausfuehrenderId),
             Buchung(mitarbeiterId, datum, Konto.Saldo, minuten, text, bemerkung, vorgang, ausfuehrenderId));
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok($"{Zeitformat.Dauer(minuten)} Std. wurden vom Konto „{quelle.Text()}“ auf den Gleitzeitsaldo umgebucht.");
+        return Ergebnis.Ok(F("{0} Std. wurden vom Konto „{1}“ auf den Gleitzeitsaldo umgebucht.", Zeitformat.Dauer(minuten), quelle.Text()));
     }
 
     public async Task<Ergebnis> KorrigierenAsync(int mitarbeiterId, Konto konto, string? stunden, DateOnly datum, string? bemerkung, int ausfuehrenderId, CancellationToken ct = default)
     {
         if (!Zeitformat.TryParseDauer(stunden, out var minuten) || minuten == 0)
         {
-            return Ergebnis.Fehler("Bitte einen Wert im Format Std:Min angeben, z. B. 2:30 oder -1:15.");
+            return Ergebnis.Fehler(T("Bitte einen Wert im Format Std:Min angeben, z. B. 2:30 oder -1:15."));
         }
 
         if (string.IsNullOrWhiteSpace(bemerkung))
         {
-            return Ergebnis.Fehler("Bitte eine Begründung für die Korrektur angeben.");
+            return Ergebnis.Fehler(T("Bitte eine Begründung für die Korrektur angeben."));
         }
 
         _db.Kontobuchungen.Add(Buchung(mitarbeiterId, datum, konto, minuten, "Korrektur Personalabteilung", bemerkung, Guid.NewGuid(), ausfuehrenderId));
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok($"Korrektur von {Zeitformat.Dauer(minuten)} Std. auf „{konto.Text()}“ gebucht.");
+        return Ergebnis.Ok(F("Korrektur von {0} Std. auf „{1}“ gebucht.", Zeitformat.Dauer(minuten), konto.Text()));
     }
 
     public async Task<Ergebnis> StornierenAsync(Guid vorgang, CancellationToken ct = default)
@@ -67,7 +68,7 @@ public sealed class KontobuchungService
         var buchungen = await _db.Kontobuchungen.Where(k => k.Vorgang == vorgang && !k.Storniert).ToListAsync(ct);
         if (buchungen.Count == 0)
         {
-            return Ergebnis.Fehler("Die Buchung wurde nicht gefunden oder ist bereits storniert.");
+            return Ergebnis.Fehler(T("Die Buchung wurde nicht gefunden oder ist bereits storniert."));
         }
 
         foreach (var b in buchungen)
@@ -76,7 +77,7 @@ public sealed class KontobuchungService
         }
 
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok("Die Buchung wurde storniert.");
+        return Ergebnis.Ok(T("Die Buchung wurde storniert."));
     }
 
     public Task<List<Kontobuchung>> ListeAsync(int mitarbeiterId, CancellationToken ct = default) =>

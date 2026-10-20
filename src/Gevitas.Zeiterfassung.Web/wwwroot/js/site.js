@@ -25,6 +25,8 @@
     // Hat das Formular ein Feld name="Bemerkung" (bzw. data-bemerkung-ziel), wird die Bemerkung übernommen.
     var dialog = document.getElementById("bestaetigungsdialog");
     var offenesFormular = null;
+    // Standardtitel aus dem (bereits übersetzten) HTML übernehmen
+    var standardTitel = dialog ? dialog.querySelector("[data-dialog-titel]").textContent : "";
 
     document.addEventListener("submit", function (e) {
         var form = e.target;
@@ -33,7 +35,7 @@
         }
         e.preventDefault();
         offenesFormular = form;
-        dialog.querySelector("[data-dialog-titel]").textContent = form.dataset.bestaetigenTitel || "Änderung bestätigen";
+        dialog.querySelector("[data-dialog-titel]").textContent = form.dataset.bestaetigenTitel || standardTitel;
         dialog.querySelector("[data-dialog-text]").textContent = form.dataset.bestaetigen;
         var mitBemerkung = form.querySelector("[name='Bemerkung'], [data-bemerkung-ziel]") !== null || document.querySelector("[form='" + form.id + "'][name='Bemerkung']") !== null;
         dialog.querySelector("[data-dialog-bemerkung-feld]").style.display = mitBemerkung ? "" : "none";
@@ -79,9 +81,10 @@
     // Live-Uhr im Terminal
     var uhr = document.querySelector("[data-live-uhr]");
     if (uhr) {
+        var gebietsschema = uhr.dataset.sprache === "en" ? "en-GB" : "de-DE";
         var aktualisieren = function () {
             var jetzt = new Date();
-            uhr.textContent = jetzt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+            uhr.textContent = jetzt.toLocaleTimeString(gebietsschema, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
         };
         aktualisieren();
         setInterval(aktualisieren, 1000);

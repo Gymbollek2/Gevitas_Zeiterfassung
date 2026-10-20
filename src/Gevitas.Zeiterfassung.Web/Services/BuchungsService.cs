@@ -3,6 +3,7 @@ using Gevitas.Zeiterfassung.Web.Domain;
 using Gevitas.Zeiterfassung.Web.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Services;
 
@@ -74,52 +75,52 @@ public sealed class BuchungsService
             case TerminalAktion.Kommen:
                 if (offen is not null)
                 {
-                    return Ergebnis.Fehler($"Sie sind bereits seit {Zeitformat.Uhrzeit(offen.Beginn)} Uhr angemeldet.");
+                    return Ergebnis.Fehler(F("Sie sind bereits seit {0} Uhr angemeldet.", Zeitformat.Uhrzeit(offen.Beginn)));
                 }
 
                 if (await KrankGemeldetAsync(mitarbeiterId, heute, ct))
                 {
-                    return Ergebnis.Fehler("Für heute ist bereits „Krank untertägig“ erfasst.");
+                    return Ergebnis.Fehler(T("Für heute ist bereits „Krank untertägig“ erfasst."));
                 }
 
                 Neu(mitarbeiterId, heute, jetzt, BuchungsArt.Arbeit, BuchungsQuelle.Terminal);
                 Protokollieren(mitarbeiterId, heute, $"Hinzugefügt: {Zeitformat.Uhrzeit(jetzt)}, {Kommen}, Kommen", null, mitarbeiterId, name);
                 await _db.SaveChangesAsync(ct);
-                return Ergebnis.Ok($"Kommen um {Zeitformat.Uhrzeit(jetzt)} Uhr gebucht.");
+                return Ergebnis.Ok(F("Kommen um {0} Uhr gebucht.", Zeitformat.Uhrzeit(jetzt)));
 
             case TerminalAktion.Gehen:
                 if (offen is null)
                 {
-                    return Ergebnis.Fehler("Es gibt keine offene Kommen-Buchung.");
+                    return Ergebnis.Fehler(T("Es gibt keine offene Kommen-Buchung."));
                 }
 
                 Schliessen(offen, jetzt);
                 Protokollieren(mitarbeiterId, heute, $"Hinzugefügt: {Zeitformat.Uhrzeit(jetzt)}, {Gehen}, Gehen{ArtZusatz(offen.Art)}", null, mitarbeiterId, name);
                 await _db.SaveChangesAsync(ct);
-                return Ergebnis.Ok($"Gehen um {Zeitformat.Uhrzeit(jetzt)} Uhr gebucht.");
+                return Ergebnis.Ok(F("Gehen um {0} Uhr gebucht.", Zeitformat.Uhrzeit(jetzt)));
 
             case TerminalAktion.Aendern:
                 if (offen is null)
                 {
-                    return Ergebnis.Fehler("Eine Wechselbuchung ist nur bei offener Kommen-Buchung möglich.");
+                    return Ergebnis.Fehler(T("Eine Wechselbuchung ist nur bei offener Kommen-Buchung möglich."));
                 }
 
                 Schliessen(offen, jetzt);
                 Neu(mitarbeiterId, heute, jetzt, BuchungsArt.Arbeit, BuchungsQuelle.Terminal);
                 Protokollieren(mitarbeiterId, heute, $"Hinzugefügt: {Zeitformat.Uhrzeit(jetzt)}, {Wechsel}, Wechselbuchung", null, mitarbeiterId, name);
                 await _db.SaveChangesAsync(ct);
-                return Ergebnis.Ok($"Wechselbuchung um {Zeitformat.Uhrzeit(jetzt)} Uhr gebucht.");
+                return Ergebnis.Ok(F("Wechselbuchung um {0} Uhr gebucht.", Zeitformat.Uhrzeit(jetzt)));
 
             case TerminalAktion.KrankUntertaegig:
                 var hatArbeit = await _db.Zeitbuchungen.AnyAsync(b => b.MitarbeiterId == mitarbeiterId && b.Datum == heute && b.Art == BuchungsArt.Arbeit, ct);
                 if (!hatArbeit)
                 {
-                    return Ergebnis.Fehler("Bitte zuerst den Arbeitsbeginn erfassen. Für ganztägige Erkrankungen bitte eine Abwesenheit beantragen.");
+                    return Ergebnis.Fehler(T("Bitte zuerst den Arbeitsbeginn erfassen. Für ganztägige Erkrankungen bitte eine Abwesenheit beantragen."));
                 }
 
                 if (await KrankGemeldetAsync(mitarbeiterId, heute, ct))
                 {
-                    return Ergebnis.Fehler("„Krank untertägig“ ist für heute bereits erfasst.");
+                    return Ergebnis.Fehler(T("„Krank untertägig“ ist für heute bereits erfasst."));
                 }
 
                 if (offen is not null)
@@ -140,7 +141,7 @@ public sealed class BuchungsService
                 });
                 Protokollieren(mitarbeiterId, heute, $"Hinzugefügt: {Zeitformat.Uhrzeit(jetzt)}, {Gehen}, Krank untertägig", null, mitarbeiterId, name);
                 await _db.SaveChangesAsync(ct);
-                return Ergebnis.Ok("„Krank untertägig“ wurde gebucht. Die restliche Sollarbeitszeit wird automatisch aufgefüllt. Gute Besserung!");
+                return Ergebnis.Ok(T("„Krank untertägig“ wurde gebucht. Die restliche Sollarbeitszeit wird automatisch aufgefüllt. Gute Besserung!"));
 
             case TerminalAktion.WegezeitKommenOderGehen:
                 return await TerminalAsync(mitarbeiterId,
@@ -149,7 +150,7 @@ public sealed class BuchungsService
             case TerminalAktion.WegezeitKommen:
                 if (offen?.Art == BuchungsArt.Wegezeit)
                 {
-                    return Ergebnis.Fehler($"Wegezeit läuft bereits seit {Zeitformat.Uhrzeit(offen.Beginn)} Uhr.");
+                    return Ergebnis.Fehler(F("Wegezeit läuft bereits seit {0} Uhr.", Zeitformat.Uhrzeit(offen.Beginn)));
                 }
 
                 if (offen is not null)
@@ -160,21 +161,21 @@ public sealed class BuchungsService
                 Neu(mitarbeiterId, heute, jetzt, BuchungsArt.Wegezeit, BuchungsQuelle.Terminal);
                 Protokollieren(mitarbeiterId, heute, $"Hinzugefügt: {Zeitformat.Uhrzeit(jetzt)}, {Kommen}, Kommen, Wegezeit", null, mitarbeiterId, name);
                 await _db.SaveChangesAsync(ct);
-                return Ergebnis.Ok($"Wegezeit ab {Zeitformat.Uhrzeit(jetzt)} Uhr gebucht.");
+                return Ergebnis.Ok(F("Wegezeit ab {0} Uhr gebucht.", Zeitformat.Uhrzeit(jetzt)));
 
             case TerminalAktion.WegezeitGehen:
                 if (offen?.Art != BuchungsArt.Wegezeit)
                 {
-                    return Ergebnis.Fehler("Es läuft keine Wegezeit.");
+                    return Ergebnis.Fehler(T("Es läuft keine Wegezeit."));
                 }
 
                 Schliessen(offen, jetzt);
                 Protokollieren(mitarbeiterId, heute, $"Hinzugefügt: {Zeitformat.Uhrzeit(jetzt)}, {Gehen}, Gehen, Wegezeit", null, mitarbeiterId, name);
                 await _db.SaveChangesAsync(ct);
-                return Ergebnis.Ok($"Wegezeit bis {Zeitformat.Uhrzeit(jetzt)} Uhr gebucht.");
+                return Ergebnis.Ok(F("Wegezeit bis {0} Uhr gebucht.", Zeitformat.Uhrzeit(jetzt)));
 
             default:
-                return Ergebnis.Fehler("Unbekannte Aktion.");
+                return Ergebnis.Fehler(T("Unbekannte Aktion."));
         }
     }
 
@@ -222,12 +223,12 @@ public sealed class BuchungsService
                       ?? throw new InvalidOperationException("Buchung nicht gefunden.");
             if (buchung.Datum != e.Datum)
             {
-                return Ergebnis.Fehler("Das Datum einer Buchung kann nicht geändert werden.");
+                return Ergebnis.Fehler(T("Das Datum einer Buchung kann nicht geändert werden."));
             }
 
             if (buchung.Beginn == e.Beginn && buchung.Ende == e.Ende && buchung.Art == e.Art)
             {
-                return Ergebnis.Ok("Keine Änderung.");
+                return Ergebnis.Ok(T("Keine Änderung."));
             }
 
             details = $"Geändert: {Bereich(buchung.Beginn, buchung.Ende)}{ArtZusatz(buchung.Art)} → {Bereich(e.Beginn!.Value, e.Ende)}{ArtZusatz(e.Art)}";
@@ -240,7 +241,7 @@ public sealed class BuchungsService
 
         Protokollieren(mitarbeiterId, e.Datum, details, e.Bemerkung, ausfuehrenderId, ausfuehrender);
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok($"Zeitkorrektur für {Zeitformat.Datum(e.Datum)} gespeichert.");
+        return Ergebnis.Ok(F("Zeitkorrektur für {0} gespeichert.", Zeitformat.Datum(e.Datum)));
     }
 
     public async Task<Ergebnis> LoeschenAsync(int mitarbeiterId, int buchungId, string? bemerkung, int ausfuehrenderId, bool ohneZeitgrenze, CancellationToken ct = default)
@@ -248,19 +249,19 @@ public sealed class BuchungsService
         var buchung = await _db.Zeitbuchungen.FirstOrDefaultAsync(b => b.Id == buchungId && b.MitarbeiterId == mitarbeiterId, ct);
         if (buchung is null)
         {
-            return Ergebnis.Fehler("Die Buchung wurde nicht gefunden.");
+            return Ergebnis.Fehler(T("Die Buchung wurde nicht gefunden."));
         }
 
         if (!ohneZeitgrenze && buchung.Datum < _uhr.Heute.AddDays(-_optionen.MaxRueckwirkendeTage))
         {
-            return Ergebnis.Fehler($"Buchungen älter als {_optionen.MaxRueckwirkendeTage} Tage können nur von der Personalabteilung geändert werden.");
+            return Ergebnis.Fehler(F("Buchungen älter als {0} Tage können nur von der Personalabteilung geändert werden.", _optionen.MaxRueckwirkendeTage));
         }
 
         _db.Zeitbuchungen.Remove(buchung);
         Protokollieren(mitarbeiterId, buchung.Datum, $"Gelöscht: {Bereich(buchung.Beginn, buchung.Ende)}{ArtZusatz(buchung.Art)}", bemerkung,
             ausfuehrenderId, await NameAsync(ausfuehrenderId, ct));
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok($"Buchung vom {Zeitformat.Datum(buchung.Datum)} gelöscht.");
+        return Ergebnis.Ok(F("Buchung vom {0} gelöscht.", Zeitformat.Datum(buchung.Datum)));
     }
 
     public async Task<Ergebnis> BemerkungSpeichernAsync(int mitarbeiterId, DateOnly datum, string? text, CancellationToken ct = default)
@@ -286,7 +287,7 @@ public sealed class BuchungsService
         }
 
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok($"Tagesbezogene Bemerkung für {Zeitformat.Datum(datum)} gespeichert.");
+        return Ergebnis.Ok(F("Tagesbezogene Bemerkung für {0} gespeichert.", Zeitformat.Datum(datum)));
     }
 
     public Task<List<Buchungsprotokoll>> VerlaufAsync(int mitarbeiterId, DateOnly datum, CancellationToken ct = default) =>
@@ -307,39 +308,39 @@ public sealed class BuchungsService
 
         if (e.Beginn is null)
         {
-            return "Bitte einen Beginn eintragen.";
+            return T("Bitte einen Beginn eintragen.");
         }
 
         if (e.Datum > heute)
         {
-            return "Buchungen in der Zukunft können nicht vorgenommen werden.";
+            return T("Buchungen in der Zukunft können nicht vorgenommen werden.");
         }
 
         if (!ohneZeitgrenze && e.Datum < heute.AddDays(-_optionen.MaxRueckwirkendeTage))
         {
-            return $"Zeiten können maximal für {_optionen.MaxRueckwirkendeTage} Tage in die Vergangenheit erfasst werden.";
+            return F("Zeiten können maximal für {0} Tage in die Vergangenheit erfasst werden.", _optionen.MaxRueckwirkendeTage);
         }
 
         if (e.Datum == heute && (e.Beginn > jetzt || e.Ende > jetzt))
         {
-            return "Buchungen in der Zukunft können nicht vorgenommen werden. Das Arbeitsende kann erst nach Arbeitsende eingetragen werden.";
+            return T("Buchungen in der Zukunft können nicht vorgenommen werden. Das Arbeitsende kann erst nach Arbeitsende eingetragen werden.");
         }
 
         if (e.Art == BuchungsArt.KrankUntertaegig)
         {
             return e.Ende is null
                 ? null
-                : "Bei „Krank untertägig“ darf keine Ende-Buchung eingetragen werden – sie wird automatisch ergänzt.";
+                : T("Bei „Krank untertägig“ darf keine Ende-Buchung eingetragen werden – sie wird automatisch ergänzt.");
         }
 
         if (e.Ende is null && e.Datum != heute)
         {
-            return "Bitte ein Ende eintragen.";
+            return T("Bitte ein Ende eintragen.");
         }
 
         if (e.Ende is not null && e.Ende <= e.Beginn)
         {
-            return "Das Ende muss nach dem Beginn liegen.";
+            return T("Das Ende muss nach dem Beginn liegen.");
         }
 
         return null;
@@ -350,13 +351,13 @@ public sealed class BuchungsService
         if (e.Art == BuchungsArt.KrankUntertaegig)
         {
             return vorhandene.Any(b => b.Art == BuchungsArt.KrankUntertaegig)
-                ? "„Krank untertägig“ ist für diesen Tag bereits erfasst."
+                ? T("„Krank untertägig“ ist für diesen Tag bereits erfasst.")
                 : null;
         }
 
         if (e.Ende is null && vorhandene.Any(b => b.Ende is null && b.Art != BuchungsArt.KrankUntertaegig))
         {
-            return "Es kann nur eine offene Buchung (ohne Ende) geben.";
+            return T("Es kann nur eine offene Buchung (ohne Ende) geben.");
         }
 
         var neuBeginn = Zeitformat.MinutenSeitMitternacht(e.Beginn!.Value);
@@ -367,7 +368,7 @@ public sealed class BuchungsService
             var ende = b.Ende is null ? 24 * 60 : Zeitformat.MinutenSeitMitternacht(b.Ende.Value);
             if (neuBeginn < ende && beginn < neuEnde)
             {
-                return $"Die Buchung überschneidet sich mit {Bereich(b.Beginn, b.Ende)}.";
+                return F("Die Buchung überschneidet sich mit {0}.", Bereich(b.Beginn, b.Ende));
             }
         }
 

@@ -1,22 +1,22 @@
 @page
 @model Gevitas.Zeiterfassung.Web.Pages.Zeitwirtschaft.RegelverletzungenModel
 @{
-    ViewData["Title"] = "Regelverletzungen";
+    ViewData["Title"] = T("Regelverletzungen");
     var m = Model.MonatsBeginn;
     string MonatIso(DateOnly d) => d.ToString("yyyy-MM", System.Globalization.CultureInfo.InvariantCulture);
 }
 <section class="karte">
     <form method="get" class="filterleiste">
         <div class="monatsnavigation">
-            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatIso(m.AddMonths(-1))" asp-route-ma="@Model.Ma" asp-route-mitQuittierten="@Model.MitQuittierten" aria-label="Vormonat">‹</a>
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatIso(m.AddMonths(-1))" asp-route-ma="@Model.Ma" asp-route-mitQuittierten="@Model.MitQuittierten" aria-label="@T("Vormonat")">‹</a>
             <strong>@Zeitformat.Monatsname(m.Month) @m.Year</strong>
-            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatIso(m.AddMonths(1))" asp-route-ma="@Model.Ma" asp-route-mitQuittierten="@Model.MitQuittierten" aria-label="Folgemonat">›</a>
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatIso(m.AddMonths(1))" asp-route-ma="@Model.Ma" asp-route-mitQuittierten="@Model.MitQuittierten" aria-label="@T("Folgemonat")">›</a>
         </div>
         <input type="hidden" name="monat" value="@Model.MonatText" />
         @if (Model.Personen.Count > 1)
         {
             <label class="feld">
-                <span>Mitarbeiter/in</span>
+                <span>@T("Mitarbeiter/in")</span>
                 <select name="ma" data-auto-absenden>
                     @foreach (var p in Model.Personen)
                     {
@@ -26,25 +26,25 @@
             </label>
         }
         <label class="feld">
-            <span>Filter</span>
+            <span>@T("Filter")</span>
             <select name="mitQuittierten" data-auto-absenden>
-                <option value="false" selected="@(!Model.MitQuittierten)">Nicht quittiert</option>
-                <option value="true" selected="@Model.MitQuittierten">Alle</option>
+                <option value="false" selected="@(!Model.MitQuittierten)">@T("Nicht quittiert")</option>
+                <option value="true" selected="@Model.MitQuittierten">@T("Alle")</option>
             </select>
         </label>
-        <noscript><button type="submit" class="knopf">Anzeigen</button></noscript>
+        <noscript><button type="submit" class="knopf">@T("Anzeigen")</button></noscript>
     </form>
 
     @if (Model.Liste.Count == 0)
     {
-        <div class="hinweis hinweis-erfolg">Keine Regelverletzungen im gewählten Zeitraum.</div>
+        <div class="hinweis hinweis-erfolg">@T("Keine Regelverletzungen im gewählten Zeitraum.")</div>
     }
     else
     {
         <div class="tabellen-rahmen">
             <table class="tabelle">
                 <thead>
-                    <tr><th>Datum</th><th>Beschreibung</th><th>Info</th><th>Quittiert</th><th class="aktionen">Aktion</th></tr>
+                    <tr><th>@T("Datum")</th><th>@T("Beschreibung")</th><th>@T("Info")</th><th>@T("Quittiert")</th><th class="aktionen">@T("Aktion")</th></tr>
                 </thead>
                 <tbody>
                     @foreach (var r in Model.Liste)
@@ -63,14 +63,14 @@
                                         <input type="hidden" name="mitQuittierten" value="@Model.MitQuittierten.ToString().ToLowerInvariant()" />
                                         <input type="hidden" name="quittieren" value="@((!r.Quittiert).ToString().ToLowerInvariant())" />
                                         <label class="checkbox">
-                                            <input type="checkbox" checked="@r.Quittiert" data-auto-absenden aria-label="Quittieren" />
-                                            @(r.Quittiert ? "Ja" : "Quittieren")
+                                            <input type="checkbox" checked="@r.Quittiert" data-auto-absenden aria-label="@T("Quittieren")" />
+                                            @(r.Quittiert ? T("Ja") : T("Quittieren"))
                                         </label>
                                     </form>
                                 }
                                 else
                                 {
-                                    <span>@(r.Quittiert ? "Ja" : r.Quittierbar ? "Nein" : "Korrektur nötig")</span>
+                                    <span>@(r.Quittiert ? T("Ja") : r.Quittierbar ? T("Nein") : T("Korrektur nötig"))</span>
                                 }
                             </td>
                             <td class="aktionen">
@@ -78,7 +78,7 @@
                                 {
                                     <a class="knopf knopf-sekundaer knopf-klein" asp-page="/Zeitwirtschaft/Zeitkorrekturen"
                                        asp-route-monat="@MonatIso(r.Datum)" asp-route-tag="@r.Datum.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)"
-                                       asp-route-ma="@(Model.IstEigene ? (int?)null : Model.Person.Id)" title="Buchung bearbeiten"><svg class="icon"><use href="#i-korrektur" /></svg>Bearbeiten</a>
+                                       asp-route-ma="@(Model.IstEigene ? (int?)null : Model.Person.Id)" title="@T("Buchung bearbeiten")"><svg class="icon"><use href="#i-korrektur" /></svg>@T("Bearbeiten")</a>
                                 }
                             </td>
                         </tr>
@@ -88,11 +88,10 @@
         </div>
     }
     <p class="feld-hilfe">
-        Hier werden Buchungen mit Besonderheiten angezeigt, z. B. fehlende Buchungen, Arbeitszeit &gt; 10 Std. oder fehlende Gehen-Buchungen.
-        Ist ein Eintrag korrekt, können Sie ihn selbst quittieren. Fehlende Gehen-Buchungen müssen korrigiert werden.
+        @T("Hier werden Buchungen mit Besonderheiten angezeigt, z. B. fehlende Buchungen, Arbeitszeit > 10 Std. oder fehlende Gehen-Buchungen. Ist ein Eintrag korrekt, können Sie ihn selbst quittieren. Fehlende Gehen-Buchungen müssen korrigiert werden.")
         @if (User.IstFuehrungskraft())
         {
-            <span>Als Führungskraft können Sie die Unregelmäßigkeiten Ihrer Mitarbeitenden über die Auswahl einsehen.</span>
+            <span>@T("Als Führungskraft können Sie die Unregelmäßigkeiten Ihrer Mitarbeitenden über die Auswahl einsehen.")</span>
         }
     </p>
 </section>

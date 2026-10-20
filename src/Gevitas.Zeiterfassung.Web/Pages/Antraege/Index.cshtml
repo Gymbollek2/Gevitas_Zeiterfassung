@@ -1,40 +1,40 @@
 @page
 @model Gevitas.Zeiterfassung.Web.Pages.Antraege.IndexModel
 @{
-    ViewData["Title"] = "Anträge";
+    ViewData["Title"] = T("Anträge");
     var genehmigerSicht = Model.Sicht == AntragsSicht.Genehmiger;
 }
 <section class="karte">
     <form method="get" class="filterleiste">
         <label class="feld">
-            <span>Ab Datum</span>
+            <span>@T("Ab Datum")</span>
             <input type="date" name="ab" value="@Model.Ab?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" data-auto-absenden />
         </label>
         @if (Model.DarfGenehmigen)
         {
             <label class="feld">
-                <span>Rolle</span>
+                <span>@T("Rolle")</span>
                 <select name="sicht" data-auto-absenden>
-                    <option value="Antragsteller" selected="@(!genehmigerSicht)">Antragsteller</option>
-                    <option value="Genehmiger" selected="@genehmigerSicht">Genehmiger</option>
+                    <option value="Antragsteller" selected="@(!genehmigerSicht)">@T("Antragsteller")</option>
+                    <option value="Genehmiger" selected="@genehmigerSicht">@T("Genehmiger")</option>
                 </select>
             </label>
         }
         <label class="feld">
-            <span>Status</span>
+            <span>@T("Status")</span>
             <select name="filter" data-auto-absenden>
-                <option value="Offen" selected="@(Model.Filter == AntragsFilter.Offen)">Offen</option>
-                <option value="Alle" selected="@(Model.Filter == AntragsFilter.Alle)">Alle</option>
-                <option value="Erledigt" selected="@(Model.Filter == AntragsFilter.Erledigt)">Erledigt</option>
+                <option value="Offen" selected="@(Model.Filter == AntragsFilter.Offen)">@T("Offen")</option>
+                <option value="Alle" selected="@(Model.Filter == AntragsFilter.Alle)">@T("Alle")</option>
+                <option value="Erledigt" selected="@(Model.Filter == AntragsFilter.Erledigt)">@T("Erledigt")</option>
             </select>
         </label>
-        <noscript><button type="submit" class="knopf">Filtern</button></noscript>
-        <a class="knopf" asp-page="/Antraege/Abwesenheit"><svg class="icon"><use href="#i-plus" /></svg>Abwesenheit beantragen</a>
+        <noscript><button type="submit" class="knopf">@T("Filtern")</button></noscript>
+        <a class="knopf" asp-page="/Antraege/Abwesenheit"><svg class="icon"><use href="#i-plus" /></svg>@T("Abwesenheit beantragen")</a>
     </form>
 
     @if (Model.Liste.Count == 0)
     {
-        <div class="hinweis">Keine Anträge für den gewählten Zeitraum, die Rolle oder den Status vorhanden.</div>
+        <div class="hinweis">@T("Keine Anträge für den gewählten Zeitraum, die Rolle oder den Status vorhanden.")</div>
     }
     else
     {
@@ -42,17 +42,17 @@
             <table class="tabelle">
                 <thead>
                     <tr>
-                        <th>Antrag</th>
-                        <th>Erstellt am</th>
+                        <th>@T("Antrag")</th>
+                        <th>@T("Erstellt am")</th>
                         @if (genehmigerSicht)
                         {
-                            <th>Mitarbeiter/in</th>
+                            <th>@T("Mitarbeiter/in")</th>
                         }
-                        <th>Details</th>
-                        <th>Bemerkung (Antrag)</th>
-                        <th>Status</th>
-                        <th>Genehmiger / Entscheidung</th>
-                        <th class="aktionen">Aktionen</th>
+                        <th>@T("Details")</th>
+                        <th>@T("Bemerkung (Antrag)")</th>
+                        <th>@T("Status")</th>
+                        <th>@T("Genehmiger / Entscheidung")</th>
+                        <th class="aktionen">@T("Aktionen")</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,7 +66,7 @@
                             _ => "plakette-gelb"
                         };
                         <tr>
-                            <td><strong>@a.Art.Text()</strong>@(a.Stufen > 1 ? $" (Stufe {a.Stufe}/{a.Stufen})" : "")</td>
+                            <td><strong>@a.Art.Text()</strong>@(a.Stufen > 1 ? " " + F("(Stufe {0}/{1})", a.Stufe, a.Stufen) : "")</td>
                             <td>@Zeitformat.Zeitpunkt(a.ErstelltAm)</td>
                             @if (genehmigerSicht)
                             {
@@ -78,7 +78,7 @@
                             <td>
                                 @if (a.Status == AntragsStatus.Offen)
                                 {
-                                    <span>@(a.Genehmiger?.AnzeigeName ?? "Personalabteilung")</span>
+                                    <span>@(a.Genehmiger?.AnzeigeName ?? T("Personalabteilung"))</span>
                                 }
                                 else
                                 {
@@ -95,18 +95,18 @@
                                     <form method="post" class="knopfleiste" style="justify-content:flex-end">
                                         <input type="hidden" name="antragId" value="@a.Id" />
                                         <input type="hidden" name="filter" value="@Model.Filter" />
-                                        <input type="text" name="bemerkung" class="eingabe" placeholder="Bemerkung (bei Ablehnung Pflicht)" style="max-width:220px" />
-                                        <button type="submit" class="knopf knopf-erfolg knopf-klein" asp-page-handler="Genehmigen" title="Genehmigen">✓ Genehmigen</button>
-                                        <button type="submit" class="knopf knopf-gefahr knopf-klein" asp-page-handler="Ablehnen" title="Ablehnen">✕ Ablehnen</button>
+                                        <input type="text" name="bemerkung" class="eingabe" placeholder="@T("Bemerkung (bei Ablehnung Pflicht)")" style="max-width:220px" />
+                                        <button type="submit" class="knopf knopf-erfolg knopf-klein" asp-page-handler="Genehmigen" title="@T("Genehmigen")">✓ @T("Genehmigen")</button>
+                                        <button type="submit" class="knopf knopf-gefahr knopf-klein" asp-page-handler="Ablehnen" title="@T("Ablehnen")">✕ @T("Ablehnen")</button>
                                     </form>
                                 }
                                 else if (a.Status == AntragsStatus.Offen && a.AntragstellerId == User.MitarbeiterId())
                                 {
-                                    <form method="post" asp-page-handler="Zurueckziehen" data-bestaetigen="Diesen offenen Antrag löschen? Er wird Ihrer Führungskraft dann nicht mehr angezeigt." data-bestaetigen-titel="Antrag löschen">
+                                    <form method="post" asp-page-handler="Zurueckziehen" data-bestaetigen="@T("Diesen offenen Antrag löschen? Er wird Ihrer Führungskraft dann nicht mehr angezeigt.")" data-bestaetigen-titel="@T("Antrag löschen")">
                                         <input type="hidden" name="antragId" value="@a.Id" />
                                         <input type="hidden" name="sicht" value="@Model.Sicht" />
                                         <input type="hidden" name="filter" value="@Model.Filter" />
-                                        <button type="submit" class="knopf knopf-sekundaer knopf-klein"><svg class="icon"><use href="#i-loeschen" /></svg>Löschen</button>
+                                        <button type="submit" class="knopf knopf-sekundaer knopf-klein"><svg class="icon"><use href="#i-loeschen" /></svg>@T("Löschen")</button>
                                     </form>
                                 }
                             </td>
@@ -117,7 +117,7 @@
         </div>
         @if (genehmigerSicht)
         {
-            <p class="feld-hilfe">Anträge werden einzeln genehmigt oder abgelehnt. Bei einer Ablehnung ist eine Begründung erforderlich.</p>
+            <p class="feld-hilfe">@T("Anträge werden einzeln genehmigt oder abgelehnt. Bei einer Ablehnung ist eine Begründung erforderlich.")</p>
         }
     }
 </section>

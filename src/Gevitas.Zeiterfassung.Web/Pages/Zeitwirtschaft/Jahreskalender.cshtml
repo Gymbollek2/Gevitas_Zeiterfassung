@@ -1,28 +1,28 @@
 @page
 @model Gevitas.Zeiterfassung.Web.Pages.Zeitwirtschaft.JahreskalenderModel
 @{
-    ViewData["Title"] = "Jahreskalender";
+    ViewData["Title"] = T("Jahreskalender");
     var jahr = Model.Jahr!.Value;
     var arten = Model.Tage.Values.SelectMany(t => t.Abwesenheiten).Select(a => a.Art).Where(a => a is not null).DistinctBy(a => a!.Code).ToList();
 }
 <section class="karte">
     <div class="karte-kopf">
         <div class="monatsnavigation">
-            <a class="knopf knopf-sekundaer knopf-icon" asp-route-jahr="@(jahr - 1)" aria-label="Vorjahr">‹</a>
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-jahr="@(jahr - 1)" aria-label="@T("Vorjahr")">‹</a>
             <strong>@jahr</strong>
-            <a class="knopf knopf-sekundaer knopf-icon" asp-route-jahr="@(jahr + 1)" aria-label="Folgejahr">›</a>
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-jahr="@(jahr + 1)" aria-label="@T("Folgejahr")">›</a>
         </div>
         <div class="knopfleiste">
-            <a class="knopf" asp-page="/Antraege/Abwesenheit" asp-route-zurueck="jahr"><svg class="icon"><use href="#i-plus" /></svg>Eintrag hinzufügen</a>
-            <a class="knopf knopf-gefahr" asp-page="/Antraege/AbwesenheitLoeschen"><svg class="icon"><use href="#i-loeschen" /></svg>Eintrag löschen</a>
+            <a class="knopf" asp-page="/Antraege/Abwesenheit" asp-route-zurueck="jahr"><svg class="icon"><use href="#i-plus" /></svg>@T("Eintrag hinzufügen")</a>
+            <a class="knopf knopf-gefahr" asp-page="/Antraege/AbwesenheitLoeschen"><svg class="icon"><use href="#i-loeschen" /></svg>@T("Eintrag löschen")</a>
         </div>
     </div>
 
     <div class="kennzahlen" style="margin-bottom:1rem">
-        <div class="kennzahl"><span class="kennzahl-label">Jahresanspruch</span><span class="kennzahl-wert">@Zeitformat.Tage(Model.Urlaub.Anspruch)</span></div>
-        <div class="kennzahl"><span class="kennzahl-label">Übertrag Vorjahr</span><span class="kennzahl-wert">@Zeitformat.Tage(Model.Urlaub.Uebertrag)</span></div>
-        <div class="kennzahl"><span class="kennzahl-label">Urlaubssaldo</span><span class="kennzahl-wert">@Zeitformat.Tage(Model.Urlaub.Urlaubssaldo)</span></div>
-        <div class="kennzahl"><span class="kennzahl-label">Resturlaub (Plan 31.12.)</span><span class="kennzahl-wert">@Zeitformat.Tage(Model.Urlaub.ResturlaubPlan)</span></div>
+        <div class="kennzahl"><span class="kennzahl-label">@T("Jahresanspruch")</span><span class="kennzahl-wert">@Zeitformat.Tage(Model.Urlaub.Anspruch)</span></div>
+        <div class="kennzahl"><span class="kennzahl-label">@T("Übertrag Vorjahr")</span><span class="kennzahl-wert">@Zeitformat.Tage(Model.Urlaub.Uebertrag)</span></div>
+        <div class="kennzahl"><span class="kennzahl-label">@T("Urlaubssaldo")</span><span class="kennzahl-wert">@Zeitformat.Tage(Model.Urlaub.Urlaubssaldo)</span></div>
+        <div class="kennzahl"><span class="kennzahl-label">@T("Resturlaub (Plan 31.12.)")</span><span class="kennzahl-wert">@Zeitformat.Tage(Model.Urlaub.ResturlaubPlan)</span></div>
     </div>
 
     <div class="tabellen-rahmen">
@@ -55,8 +55,8 @@
                             var abw = tag.Abwesenheiten.FirstOrDefault();
                             var klassen = (!tag.IstArbeitstag ? "frei " : "") + (tag.Feiertag is not null ? "feiertag " : "") + (datum == Model.Heute ? "heute" : "");
                             var titel = Zeitformat.DatumMitWochentag(datum)
-                                        + (tag.Feiertag is null ? "" : $" – {tag.Feiertag}")
-                                        + (abw is null ? "" : $" – {abw.Art?.Name} ({abw.Status.Text()})");
+                                        + (tag.Feiertag is null ? "" : $" – {T(tag.Feiertag)}")
+                                        + (abw is null ? "" : $" – {T(abw.Art?.Name ?? abw.ArtCode)} ({abw.Status.Text()})");
                             if (abw is not null)
                             {
                                 var stil = $"background:{abw.Art?.Farbe}" + (abw.Status == AbwesenheitsStatus.Beantragt ? ";opacity:.55" : "");
@@ -76,9 +76,9 @@
     <div class="legende">
         @foreach (var art in arten)
         {
-            <span><span class="legende-punkt" style="background:@art!.Farbe"></span>@art.Code = @art.Name</span>
+            <span><span class="legende-punkt" style="background:@art!.Farbe"></span>@art.Code = @T(art.Name)</span>
         }
-        <span><span class="legende-punkt" style="background:#cfe9d8"></span>Feiertag</span>
-        <span>Blass = beantragt</span>
+        <span><span class="legende-punkt" style="background:var(--feiertag-bg)"></span>@T("Feiertag")</span>
+        <span>@T("Blass = beantragt")</span>
     </div>
 </section>

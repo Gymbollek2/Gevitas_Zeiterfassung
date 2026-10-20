@@ -1,6 +1,7 @@
 using Gevitas.Zeiterfassung.Web.Data;
 using Gevitas.Zeiterfassung.Web.Domain;
 using Microsoft.EntityFrameworkCore;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Services;
 
@@ -112,38 +113,38 @@ public sealed class MitarbeiterService
         if (string.IsNullOrWhiteSpace(benutzername) || string.IsNullOrWhiteSpace(e.Personalnummer)
             || string.IsNullOrWhiteSpace(e.Vorname) || string.IsNullOrWhiteSpace(e.Nachname))
         {
-            return Ergebnis.Fehler("Personalnummer, Benutzername, Vor- und Nachname sind Pflichtfelder.");
+            return Ergebnis.Fehler(T("Personalnummer, Benutzername, Vor- und Nachname sind Pflichtfelder."));
         }
 
         if (!Zeitformat.TryParseDauer(e.SollProTag, out var sollMinuten) || sollMinuten < 0 || sollMinuten > 24 * 60)
         {
-            return Ergebnis.Fehler("Bitte die Sollarbeitszeit im Format Std:Min angeben (z. B. 8:00).");
+            return Ergebnis.Fehler(T("Bitte die Sollarbeitszeit im Format Std:Min angeben (z. B. 8:00)."));
         }
 
         if (e.Jahresurlaub is < 0 or > 60)
         {
-            return Ergebnis.Fehler("Der Jahresurlaub muss zwischen 0 und 60 Tagen liegen.");
+            return Ergebnis.Fehler(T("Der Jahresurlaub muss zwischen 0 und 60 Tagen liegen."));
         }
 
         if (await _db.Mitarbeiter.AnyAsync(m => m.Id != e.Id && m.Benutzername == benutzername, ct))
         {
-            return Ergebnis.Fehler("Der Benutzername ist bereits vergeben.");
+            return Ergebnis.Fehler(T("Der Benutzername ist bereits vergeben."));
         }
 
         if (await _db.Mitarbeiter.AnyAsync(m => m.Id != e.Id && m.Personalnummer == e.Personalnummer.Trim(), ct))
         {
-            return Ergebnis.Fehler("Die Personalnummer ist bereits vergeben.");
+            return Ergebnis.Fehler(T("Die Personalnummer ist bereits vergeben."));
         }
 
         if (e.Id is not null && (e.VorgesetzterId == e.Id || e.AbweichenderGenehmigerId == e.Id))
         {
-            return Ergebnis.Fehler("Eine Person kann nicht ihre eigene Führungskraft bzw. Genehmigerin sein.");
+            return Ergebnis.Fehler(T("Eine Person kann nicht ihre eigene Führungskraft bzw. Genehmigerin sein."));
         }
 
         if (e.Id is not null && e.VorgesetzterId is not null
             && (await UnterstellteAsync(e.Id.Value, ct)).Any(m => m.Id == e.VorgesetzterId))
         {
-            return Ergebnis.Fehler("Die gewählte Führungskraft ist dieser Person unterstellt (Zirkelbezug).");
+            return Ergebnis.Fehler(T("Die gewählte Führungskraft ist dieser Person unterstellt (Zirkelbezug)."));
         }
 
         Mitarbeiter mitarbeiter;
@@ -152,7 +153,7 @@ public sealed class MitarbeiterService
             var passwortFehler = _passwoerter.RichtlinieVerletzt(e.NeuesPasswort);
             if (passwortFehler is not null)
             {
-                return Ergebnis.Fehler("Startpasswort: " + passwortFehler);
+                return Ergebnis.Fehler(T("Startpasswort: ") + passwortFehler);
             }
 
             mitarbeiter = new Mitarbeiter { PasswortAendernErforderlich = true };
@@ -191,7 +192,7 @@ public sealed class MitarbeiterService
         }
 
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok($"{mitarbeiter.VollerName} wurde gespeichert.");
+        return Ergebnis.Ok(F("{0} wurde gespeichert.", mitarbeiter.VollerName));
     }
 
     public async Task<Ergebnis> PasswortAendernAsync(int id, string altesPasswort, string neuesPasswort, CancellationToken ct = default)
@@ -199,12 +200,12 @@ public sealed class MitarbeiterService
         var mitarbeiter = await _db.Mitarbeiter.FirstAsync(m => m.Id == id, ct);
         if (!_passwoerter.Pruefen(mitarbeiter, altesPasswort))
         {
-            return Ergebnis.Fehler("Das aktuelle Passwort ist nicht korrekt.");
+            return Ergebnis.Fehler(T("Das aktuelle Passwort ist nicht korrekt."));
         }
 
         if (altesPasswort == neuesPasswort)
         {
-            return Ergebnis.Fehler("Das neue Passwort muss sich vom bisherigen unterscheiden.");
+            return Ergebnis.Fehler(T("Das neue Passwort muss sich vom bisherigen unterscheiden."));
         }
 
         var fehler = _passwoerter.RichtlinieVerletzt(neuesPasswort);
@@ -216,6 +217,6 @@ public sealed class MitarbeiterService
         mitarbeiter.PasswortHash = _passwoerter.Hashen(mitarbeiter, neuesPasswort);
         mitarbeiter.PasswortAendernErforderlich = false;
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok("Ihr Passwort wurde geändert.");
+        return Ergebnis.Ok(T("Ihr Passwort wurde geändert."));
     }
 }

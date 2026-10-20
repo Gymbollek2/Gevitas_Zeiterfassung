@@ -1,9 +1,9 @@
-using System.ComponentModel.DataAnnotations;
 using Gevitas.Zeiterfassung.Web.Infrastructure;
 using Gevitas.Zeiterfassung.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Pages.Account;
 
@@ -17,19 +17,12 @@ public class PasswortAendernModel : AppSeite
     }
 
     [BindProperty]
-    [Required(ErrorMessage = "Bitte das aktuelle Passwort eingeben.")]
-    [DataType(DataType.Password)]
     public string AltesPasswort { get; set; } = string.Empty;
 
     [BindProperty]
-    [Required(ErrorMessage = "Bitte ein neues Passwort eingeben.")]
-    [DataType(DataType.Password)]
     public string NeuesPasswort { get; set; } = string.Empty;
 
     [BindProperty]
-    [Required(ErrorMessage = "Bitte das neue Passwort wiederholen.")]
-    [DataType(DataType.Password)]
-    [Compare(nameof(NeuesPasswort), ErrorMessage = "Die Passwörter stimmen nicht überein.")]
     public string Wiederholung { get; set; } = string.Empty;
 
     public bool Pflicht => User.HasClaim(Claimtypen.PasswortAendern, "1");
@@ -40,6 +33,21 @@ public class PasswortAendernModel : AppSeite
 
     public async Task<IActionResult> OnPostAsync()
     {
+        if (string.IsNullOrEmpty(AltesPasswort))
+        {
+            ModelState.AddModelError(nameof(AltesPasswort), T("Bitte das aktuelle Passwort eingeben."));
+        }
+
+        if (string.IsNullOrEmpty(NeuesPasswort))
+        {
+            ModelState.AddModelError(nameof(NeuesPasswort), T("Bitte ein neues Passwort eingeben."));
+        }
+
+        if (NeuesPasswort != Wiederholung)
+        {
+            ModelState.AddModelError(nameof(Wiederholung), T("Die Passwörter stimmen nicht überein."));
+        }
+
         if (!ModelState.IsValid)
         {
             return Page();

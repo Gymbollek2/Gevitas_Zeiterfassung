@@ -2,43 +2,43 @@
 @using Microsoft.Extensions.Options
 @inject IOptions<ZeiterfassungOptions> Einstellungen
 @{
-    ViewData["Title"] = "Information";
+    ViewData["Title"] = T("Information");
     var o = Einstellungen.Value;
 }
 <div class="raster raster-2">
     <section class="karte">
-        <h2>Darstellung der Zeiten</h2>
-        <p>Alle Zeiten werden in <strong>Stunden:Minuten</strong> angezeigt. Die Zahl hinter dem Doppelpunkt ist keine Dezimalzahl, sondern die Anzahl der Minuten.</p>
+        <h2>@T("Darstellung der Zeiten")</h2>
+        <p>@T("Alle Zeiten werden in Stunden:Minuten angezeigt. Die Zahl hinter dem Doppelpunkt ist keine Dezimalzahl, sondern die Anzahl der Minuten.")</p>
         <ul>
-            <li><code>10:50</code> = 10 Stunden und 50 Minuten</li>
-            <li><code>10:30</code> = 10 Stunden und 30 Minuten</li>
+            <li><code>10:50</code> = @T("10 Stunden und 50 Minuten")</li>
+            <li><code>10:30</code> = @T("10 Stunden und 30 Minuten")</li>
         </ul>
     </section>
 
     <section class="karte">
-        <h2>Regeln der Zeiterfassung</h2>
+        <h2>@T("Regeln der Zeiterfassung")</h2>
         <ul>
-            <li>Rahmenarbeitszeit: @o.Rahmenarbeitszeit.Beginn – @o.Rahmenarbeitszeit.Ende Uhr</li>
-            <li>Kappung der täglichen Arbeitszeit nach @Zeitformat.Dauer(o.MaxArbeitszeitMinuten) Stunden (Freigabe per Antrag möglich)</li>
-            <li>Pausen: nach @Zeitformat.Dauer(o.Pausen.Schwelle1Minuten) Std. mindestens @o.Pausen.Pause1Minuten Min., nach @Zeitformat.Dauer(o.Pausen.Schwelle2Minuten) Std. mindestens @o.Pausen.Pause2Minuten Min. Eine Unterbrechung zählt ab @o.Pausen.MinPauseMinuten Min. als Pause.</li>
-            <li>Zeiten können maximal @o.MaxRueckwirkendeTage Tage rückwirkend erfasst werden; Buchungen in der Zukunft sind nicht möglich.</li>
-            <li>„Krank ohne Attest“ ist für höchstens @o.KrankOhneAttestMaxTage zusammenhängende Kalendertage möglich.</li>
+            <li>@F("Rahmenarbeitszeit: {0} – {1} Uhr", o.Rahmenarbeitszeit.Beginn, o.Rahmenarbeitszeit.Ende)</li>
+            <li>@F("Kappung der täglichen Arbeitszeit nach {0} Stunden (Freigabe per Antrag möglich)", Zeitformat.Dauer(o.MaxArbeitszeitMinuten))</li>
+            <li>@F("Pausen: nach {0} Std. mindestens {1} Min., nach {2} Std. mindestens {3} Min. Eine Unterbrechung zählt ab {4} Min. als Pause.", Zeitformat.Dauer(o.Pausen.Schwelle1Minuten), o.Pausen.Pause1Minuten, Zeitformat.Dauer(o.Pausen.Schwelle2Minuten), o.Pausen.Pause2Minuten, o.Pausen.MinPauseMinuten)</li>
+            <li>@F("Zeiten können maximal {0} Tage rückwirkend erfasst werden; Buchungen in der Zukunft sind nicht möglich.", o.MaxRueckwirkendeTage)</li>
+            <li>@F("„Krank ohne Attest“ ist für höchstens {0} zusammenhängende Kalendertage möglich.", o.KrankOhneAttestMaxTage)</li>
         </ul>
     </section>
 
     <section class="karte">
-        <h2>Buchungscodes im Verlauf</h2>
+        <h2>@T("Buchungscodes im Verlauf")</h2>
         <ul>
-            <li><strong>P10</strong> – Kommen</li>
-            <li><strong>P11</strong> – Wechselbuchung</li>
-            <li><strong>P20</strong> – Gehen</li>
+            <li><strong>P10</strong> – @T("Kommen")</li>
+            <li><strong>P11</strong> – @T("Wechselbuchung")</li>
+            <li><strong>P20</strong> – @T("Gehen")</li>
         </ul>
     </section>
 
     <section class="karte">
-        <h2>Ansprechpartner &amp; Support</h2>
-        <p>Die Personalabteilung steht bei Fragen, Anregungen oder benötigter Hilfe unter
-            <a href="mailto:@o.Support.PersonalabteilungEmail">@o.Support.PersonalabteilungEmail</a> zur Verfügung.</p>
-        <p>@o.Support.ItSupportHinweis</p>
+        <h2>@T("Ansprechpartner & Support")</h2>
+        <p>@T("Die Personalabteilung steht bei Fragen, Anregungen oder benötigter Hilfe zur Verfügung:")
+            <a href="mailto:@o.Support.PersonalabteilungEmail">@o.Support.PersonalabteilungEmail</a></p>
+        <p>@T(o.Support.ItSupportHinweis)</p>
     </section>
 </div>

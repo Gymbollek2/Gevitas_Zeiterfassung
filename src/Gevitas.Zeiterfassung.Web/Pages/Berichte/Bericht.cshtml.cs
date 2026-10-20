@@ -2,6 +2,7 @@ using Gevitas.Zeiterfassung.Web.Domain;
 using Gevitas.Zeiterfassung.Web.Infrastructure;
 using Gevitas.Zeiterfassung.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Pages.Berichte;
 
@@ -62,7 +63,7 @@ public class BerichtModel : AppSeite
 
         if (Bis.Value.DayNumber - Von.Value.DayNumber > 400)
         {
-            Fehler("Der Zeitraum darf höchstens ein Jahr umfassen.");
+            Fehler(T("Der Zeitraum darf höchstens ein Jahr umfassen."));
             Bis = Von.Value.AddYears(1);
         }
 

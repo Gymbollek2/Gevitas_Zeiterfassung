@@ -1,10 +1,10 @@
-using System.ComponentModel.DataAnnotations;
 using Gevitas.Zeiterfassung.Web.Infrastructure;
 using Gevitas.Zeiterfassung.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Pages.Account;
 
@@ -19,14 +19,11 @@ public class AnmeldenModel : PageModel
         _log = log;
     }
 
+    /// <summary>Benutzername oder Personalnummer.</summary>
     [BindProperty]
-    [Required(ErrorMessage = "Bitte Benutzername oder Personalnummer eingeben.")]
-    [Display(Name = "Benutzername")]
     public string Benutzername { get; set; } = string.Empty;
 
     [BindProperty]
-    [Required(ErrorMessage = "Bitte das Passwort eingeben.")]
-    [DataType(DataType.Password)]
     public string Passwort { get; set; } = string.Empty;
 
     [BindProperty]
@@ -45,8 +42,29 @@ public class AnmeldenModel : PageModel
         return Page();
     }
 
+    /// <summary>Sprachwahl bereits vor der Anmeldung.</summary>
+    public IActionResult OnGetSprache(string? wert)
+    {
+        if (Benutzereinstellungen.GueltigeSprache(wert) is { } sprache)
+        {
+            Benutzereinstellungen.Setzen(HttpContext, Benutzereinstellungen.SpracheCookie, sprache);
+        }
+
+        return RedirectToPage(new { returnUrl = ReturnUrl });
+    }
+
     public async Task<IActionResult> OnPostAsync()
     {
+        if (string.IsNullOrWhiteSpace(Benutzername))
+        {
+            ModelState.AddModelError(nameof(Benutzername), T("Bitte Benutzername oder Personalnummer eingeben."));
+        }
+
+        if (string.IsNullOrEmpty(Passwort))
+        {
+            ModelState.AddModelError(nameof(Passwort), T("Bitte das Passwort eingeben."));
+        }
+
         if (!ModelState.IsValid)
         {
             return Page();
@@ -56,7 +74,7 @@ public class AnmeldenModel : PageModel
         if (mitarbeiter is null)
         {
             _log.LogWarning("Fehlgeschlagene Anmeldung für Benutzer {Benutzer}.", Benutzername);
-            ModelState.AddModelError(string.Empty, "Benutzername/Personalnummer oder Passwort ist nicht korrekt.");
+            ModelState.AddModelError(string.Empty, T("Benutzername/Personalnummer oder Passwort ist nicht korrekt."));
             Passwort = string.Empty;
             return Page();
         }

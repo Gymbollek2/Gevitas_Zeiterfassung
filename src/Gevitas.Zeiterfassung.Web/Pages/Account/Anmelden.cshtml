@@ -3,14 +3,14 @@
 @using Microsoft.Extensions.Options
 @inject IOptions<ZeiterfassungOptions> Einstellungen
 @{
-    ViewData["Title"] = "Anmeldung";
+    ViewData["Title"] = T("Anmeldung");
 }
 <div class="anmeldung-seite">
     <section class="karte anmeldung-karte">
         <div class="anmeldung-kopf">
             <span class="marke-logo" aria-hidden="true">G</span>
             <h2>@Einstellungen.Value.Anwendungsname</h2>
-            <p class="feld-hilfe">Bitte melden Sie sich mit Ihrem Benutzernamen oder Ihrer Personalnummer an.</p>
+            <p class="feld-hilfe">@T("Bitte melden Sie sich mit Ihrem Benutzernamen oder Ihrer Personalnummer an.")</p>
         </div>
 
         <form method="post" class="formular">
@@ -18,23 +18,28 @@
             <input type="hidden" asp-for="ReturnUrl" />
 
             <label class="feld">
-                <span>Benutzername oder Personalnummer</span>
-                <input asp-for="Benutzername" autocomplete="username" autofocus />
+                <span>@T("Benutzername oder Personalnummer")</span>
+                <input asp-for="Benutzername" autocomplete="username" autofocus required />
                 <span asp-validation-for="Benutzername" class="feld-fehler"></span>
             </label>
 
             <label class="feld">
-                <span>Passwort</span>
-                <input asp-for="Passwort" autocomplete="current-password" />
+                <span>@T("Passwort")</span>
+                <input asp-for="Passwort" type="password" autocomplete="current-password" required />
                 <span asp-validation-for="Passwort" class="feld-fehler"></span>
             </label>
 
             <label class="checkbox">
                 <input asp-for="AngemeldetBleiben" />
-                Angemeldet bleiben
+                @T("Angemeldet bleiben")
             </label>
 
-            <button type="submit" class="knopf">Anmelden</button>
+            <button type="submit" class="knopf">@T("Anmelden")</button>
         </form>
+
+        <nav class="sprachwahl" aria-label="@T("Sprache")">
+            <a asp-page-handler="Sprache" asp-route-wert="de" asp-route-returnUrl="@Model.ReturnUrl" class="@(IstEnglisch ? "" : "aktiv")" lang="de">Deutsch</a>
+            <a asp-page-handler="Sprache" asp-route-wert="en" asp-route-returnUrl="@Model.ReturnUrl" class="@(IstEnglisch ? "aktiv" : "")" lang="en">English</a>
+        </nav>
     </section>
 </div>

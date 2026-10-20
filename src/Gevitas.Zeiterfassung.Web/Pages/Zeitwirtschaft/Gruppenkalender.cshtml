@@ -1,24 +1,24 @@
 @page
 @model Gevitas.Zeiterfassung.Web.Pages.Zeitwirtschaft.GruppenkalenderModel
 @{
-    ViewData["Title"] = "Gruppenkalender";
+    ViewData["Title"] = T("Gruppenkalender");
     var m = Model.MonatsBeginn;
 }
 <section class="karte">
     <div class="karte-kopf">
         <div class="monatsnavigation">
-            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@GruppenkalenderModel.MonatIso(m.AddMonths(-1))" aria-label="Vormonat">‹</a>
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@GruppenkalenderModel.MonatIso(m.AddMonths(-1))" aria-label="@T("Vormonat")">‹</a>
             <strong>@Zeitformat.Monatsname(m.Month) @m.Year</strong>
-            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@GruppenkalenderModel.MonatIso(m.AddMonths(1))" aria-label="Folgemonat">›</a>
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@GruppenkalenderModel.MonatIso(m.AddMonths(1))" aria-label="@T("Folgemonat")">›</a>
         </div>
-        <span class="plakette">@Model.Personen.Count Person(en)</span>
+        <span class="plakette">@F("{0} Person(en)", Model.Personen.Count)</span>
     </div>
 
     <div class="tabellen-rahmen">
         <table class="jahreskalender gruppenkalender">
             <thead>
                 <tr>
-                    <th class="name">Name</th>
+                    <th class="name">@T("Name")</th>
                     @foreach (var d in Model.Tage)
                     {
                         <th class="@(d == Model.Heute ? "heute" : "")" title="@Zeitformat.DatumMitWochentag(d)">@(Zeitformat.Wochentag(d)[..2])<br />@d.Day</th>
@@ -38,7 +38,7 @@
                                           + (abw is not null ? " abwesend" : "")
                                           + (abw?.Status == AbwesenheitsStatus.Beantragt ? " beantragt" : "")
                                           + (d == Model.Heute ? " heute" : "");
-                            <td class="@klassen" title="@(abw is null ? "" : "abwesend" + (abw.Status == AbwesenheitsStatus.Beantragt ? " (beantragt)" : ""))"></td>
+                            <td class="@klassen" title="@(abw is null ? "" : T("abwesend") + (abw.Status == AbwesenheitsStatus.Beantragt ? " " + T("(beantragt)") : ""))"></td>
                         }
                     </tr>
                 }
@@ -46,9 +46,9 @@
         </table>
     </div>
     <div class="legende">
-        <span><span class="legende-punkt" style="background:#9fb7d3"></span>abwesend</span>
-        <span><span class="legende-punkt" style="background:repeating-linear-gradient(45deg,#c8d6e8 0 3px,#fff 3px 6px)"></span>beantragt</span>
-        <span><span class="legende-punkt" style="background:#e7ecf3"></span>Wochenende/Feiertag</span>
-        <span>Die Abwesenheitsgründe werden nicht angezeigt.</span>
+        <span><span class="legende-punkt" style="background:var(--abwesend-bg)"></span>@T("abwesend")</span>
+        <span><span class="legende-punkt" style="background:repeating-linear-gradient(45deg,var(--streifen-a) 0 3px,var(--streifen-b) 3px 6px)"></span>@T("beantragt")</span>
+        <span><span class="legende-punkt" style="background:var(--frei2-bg)"></span>@T("Wochenende/Feiertag")</span>
+        <span>@T("Die Abwesenheitsgründe werden nicht angezeigt.")</span>
     </div>
 </section>

@@ -1,3 +1,5 @@
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
+
 namespace Gevitas.Zeiterfassung.Web.Domain;
 
 /// <summary>Rolle eines Benutzers. Höhere Rollen schließen die Rechte der niedrigeren ein.</summary>
@@ -76,56 +78,56 @@ public static class EnumTexte
 {
     public static string Text(this Rolle rolle) => rolle switch
     {
-        Rolle.Mitarbeiter => "Mitarbeiter/in",
-        Rolle.Fuehrungskraft => "Führungskraft",
-        Rolle.Personal => "Personalabteilung",
-        Rolle.Administrator => "Administrator/in",
+        Rolle.Mitarbeiter => T("Mitarbeiter/in"),
+        Rolle.Fuehrungskraft => T("Führungskraft"),
+        Rolle.Personal => T("Personalabteilung"),
+        Rolle.Administrator => T("Administrator/in"),
         _ => rolle.ToString()
     };
 
     public static string Text(this BuchungsArt art) => art switch
     {
-        BuchungsArt.Arbeit => "Arbeitszeit",
-        BuchungsArt.Wegezeit => "Wegezeit",
-        BuchungsArt.KrankUntertaegig => "Krank untertägig",
+        BuchungsArt.Arbeit => T("Arbeitszeit"),
+        BuchungsArt.Wegezeit => T("Wegezeit"),
+        BuchungsArt.KrankUntertaegig => T("Krank untertägig"),
         _ => art.ToString()
     };
 
     public static string Text(this AbwesenheitsStatus status) => status switch
     {
-        AbwesenheitsStatus.Beantragt => "Beantragt",
-        AbwesenheitsStatus.Genehmigt => "Genehmigt",
-        AbwesenheitsStatus.Abgelehnt => "Abgelehnt",
-        AbwesenheitsStatus.Storniert => "Storniert",
-        AbwesenheitsStatus.Zurueckgezogen => "Zurückgezogen",
+        AbwesenheitsStatus.Beantragt => T("Beantragt"),
+        AbwesenheitsStatus.Genehmigt => T("Genehmigt"),
+        AbwesenheitsStatus.Abgelehnt => T("Abgelehnt"),
+        AbwesenheitsStatus.Storniert => T("Storniert"),
+        AbwesenheitsStatus.Zurueckgezogen => T("Zurückgezogen"),
         _ => status.ToString()
     };
 
     public static string Text(this AntragsArt art) => art switch
     {
-        AntragsArt.Abwesenheit => "Abwesenheit",
-        AntragsArt.AbwesenheitLoeschen => "Löschung Abwesenheit",
-        AntragsArt.ArbeitUeber10Stunden => "Arbeit > 10 Std.",
-        AntragsArt.ArbeitVorRahmen => "Arbeit vor Rahmen",
-        AntragsArt.ArbeitNachRahmen => "Arbeit nach Rahmen",
-        AntragsArt.UrlaubsUebertrag => "Übertragung Resturlaub",
+        AntragsArt.Abwesenheit => T("Abwesenheit"),
+        AntragsArt.AbwesenheitLoeschen => T("Löschung Abwesenheit"),
+        AntragsArt.ArbeitUeber10Stunden => T("Arbeit > 10 Std."),
+        AntragsArt.ArbeitVorRahmen => T("Arbeit vor Rahmen"),
+        AntragsArt.ArbeitNachRahmen => T("Arbeit nach Rahmen"),
+        AntragsArt.UrlaubsUebertrag => T("Übertragung Resturlaub"),
         _ => art.ToString()
     };
 
     public static string Text(this AntragsStatus status) => status switch
     {
-        AntragsStatus.Offen => "Beantragt",
-        AntragsStatus.Genehmigt => "Genehmigt",
-        AntragsStatus.Abgelehnt => "Abgelehnt",
-        AntragsStatus.Zurueckgezogen => "Zurückgezogen",
+        AntragsStatus.Offen => T("Beantragt"),
+        AntragsStatus.Genehmigt => T("Genehmigt"),
+        AntragsStatus.Abgelehnt => T("Abgelehnt"),
+        AntragsStatus.Zurueckgezogen => T("Zurückgezogen"),
         _ => status.ToString()
     };
 
     public static string Text(this Konto konto) => konto switch
     {
-        Konto.Saldo => "Gleitzeitsaldo",
-        Konto.Sonderarbeitszeit => "Sonderarbeitszeit",
-        Konto.Wegezeit => "Wegezeit",
+        Konto.Saldo => T("Gleitzeitsaldo"),
+        Konto.Sonderarbeitszeit => T("Sonderarbeitszeit"),
+        Konto.Wegezeit => T("Wegezeit"),
         _ => konto.ToString()
     };
 }

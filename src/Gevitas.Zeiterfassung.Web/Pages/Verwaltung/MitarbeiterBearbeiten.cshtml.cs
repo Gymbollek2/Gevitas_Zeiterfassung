@@ -4,6 +4,7 @@ using Gevitas.Zeiterfassung.Web.Options;
 using Gevitas.Zeiterfassung.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Pages.Verwaltung;
 
@@ -74,7 +75,7 @@ public class MitarbeiterBearbeitenModel : AppSeite
         // Nur Administratoren dürfen Administratoren ernennen
         if (Eingabe.Rolle == Rolle.Administrator && BenutzerRolle < Rolle.Administrator)
         {
-            Fehler("Nur Administratoren dürfen die Rolle Administrator vergeben.");
+            Fehler(T("Nur Administratoren dürfen die Rolle Administrator vergeben."));
             await AuswahlLadenAsync();
             return Page();
         }

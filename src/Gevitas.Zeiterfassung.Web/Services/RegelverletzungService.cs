@@ -3,6 +3,7 @@ using Gevitas.Zeiterfassung.Web.Domain;
 using Gevitas.Zeiterfassung.Web.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Services;
 
@@ -65,7 +66,7 @@ public sealed class RegelverletzungService
                 if (ruhe is int r && r < _optionen.MinRuhezeitMinuten)
                 {
                     hinweise.Add(new Regelhinweis(Regelcodes.Ruhezeit,
-                        $"Ruhezeit unterschritten ({Zeitformat.Dauer(r)} statt {Zeitformat.Dauer(_optionen.MinRuhezeitMinuten)} Std.)"));
+                        F("Ruhezeit unterschritten ({0} statt {1} Std.)", Zeitformat.Dauer(r), Zeitformat.Dauer(_optionen.MinRuhezeitMinuten))));
                 }
 
                 foreach (var h in hinweise)
@@ -90,7 +91,7 @@ public sealed class RegelverletzungService
     {
         if (NichtQuittierbar.Contains(code))
         {
-            return Ergebnis.Fehler("Diese Regelverletzung muss über die Zeitkorrekturen behoben werden.");
+            return Ergebnis.Fehler(T("Diese Regelverletzung muss über die Zeitkorrekturen behoben werden."));
         }
 
         var vorhanden = await _db.Regelquittierungen.FirstOrDefaultAsync(q => q.MitarbeiterId == mitarbeiterId && q.Datum == datum && q.Regelcode == code, ct);
@@ -104,7 +105,7 @@ public sealed class RegelverletzungService
         }
 
         await _db.SaveChangesAsync(ct);
-        return Ergebnis.Ok(quittieren ? $"Hinweis vom {Zeitformat.Datum(datum)} quittiert." : $"Quittierung vom {Zeitformat.Datum(datum)} aufgehoben.");
+        return Ergebnis.Ok(quittieren ? F("Hinweis vom {0} quittiert.", Zeitformat.Datum(datum)) : F("Quittierung vom {0} aufgehoben.", Zeitformat.Datum(datum)));
     }
 
     /// <summary>Ruhezeit zwischen dem letzten Ende des Vortags und dem ersten Beginn des Tages.</summary>

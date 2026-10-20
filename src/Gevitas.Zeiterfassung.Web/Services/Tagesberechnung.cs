@@ -1,5 +1,6 @@
 using Gevitas.Zeiterfassung.Web.Domain;
 using Gevitas.Zeiterfassung.Web.Options;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Services;
 
@@ -162,7 +163,7 @@ public sealed class Tagesberechnung
 
         if (fehlendesEnde)
         {
-            r.Hinweise.Add(new Regelhinweis(Regelcodes.FehlendeGehenBuchung, "Fehlende Gehen-Buchung"));
+            r.Hinweise.Add(new Regelhinweis(Regelcodes.FehlendeGehenBuchung, T("Fehlende Gehen-Buchung")));
         }
 
         var alle = arbeit.Concat(wege).ToList();
@@ -178,13 +179,13 @@ public sealed class Tagesberechnung
         if (r.VorRahmenMinuten > 0)
         {
             r.Hinweise.Add(new Regelhinweis(Regelcodes.ArbeitVorRahmen,
-                $"Arbeit vor Rahmen ({Zeitformat.Dauer(r.VorRahmenMinuten)} nicht gewertet)"));
+                F("Arbeit vor Rahmen ({0} nicht gewertet)", Zeitformat.Dauer(r.VorRahmenMinuten))));
         }
 
         if (r.NachRahmenMinuten > 0)
         {
             r.Hinweise.Add(new Regelhinweis(Regelcodes.ArbeitNachRahmen,
-                $"Arbeit nach Rahmen ({Zeitformat.Dauer(r.NachRahmenMinuten)} nicht gewertet)"));
+                F("Arbeit nach Rahmen ({0} nicht gewertet)", Zeitformat.Dauer(r.NachRahmenMinuten))));
         }
 
         r.AnwesenheitMinuten = arbeit.Sum(i => i.Ende - i.Beginn);
@@ -197,7 +198,7 @@ public sealed class Tagesberechnung
             if (r.AnwesenheitMinuten > 0 || r.WegezeitMinuten > 0)
             {
                 r.Hinweise.Add(new Regelhinweis(Regelcodes.ArbeitAnAbwesenheitstag,
-                    $"Arbeitszeit an Abwesenheitstag ({abwesenheit.Name}) – bitte Abwesenheit stornieren, sonst wird die Zeit nicht gutgeschrieben"));
+                    F("Arbeitszeit an Abwesenheitstag ({0}) – bitte Abwesenheit stornieren, sonst wird die Zeit nicht gutgeschrieben", T(abwesenheit.Name))));
             }
 
             switch (abwesenheit.Wirkung)
@@ -234,7 +235,7 @@ public sealed class Tagesberechnung
         if (r.PausenabzugMinuten > 0)
         {
             r.Hinweise.Add(new Regelhinweis(Regelcodes.PauseErgaenzt,
-                $"Pause ergänzt ({Zeitformat.Dauer(r.PausenabzugMinuten)})"));
+                F("Pause ergänzt ({0})", Zeitformat.Dauer(r.PausenabzugMinuten))));
         }
 
         // Kappung nach 10 Stunden
@@ -243,7 +244,7 @@ public sealed class Tagesberechnung
             r.GekappteMinuten = netto - _regeln.MaxArbeitszeit;
             netto = _regeln.MaxArbeitszeit;
             r.Hinweise.Add(new Regelhinweis(Regelcodes.ArbeitUeber10Stunden,
-                $"Arbeitszeit > {Zeitformat.Dauer(_regeln.MaxArbeitszeit)} Std. ({Zeitformat.Dauer(r.GekappteMinuten)} gekappt)"));
+                F("Arbeitszeit > {0} Std. ({1} gekappt)", Zeitformat.Dauer(_regeln.MaxArbeitszeit), Zeitformat.Dauer(r.GekappteMinuten))));
         }
 
         r.NettoArbeitMinuten = netto;
@@ -262,7 +263,7 @@ public sealed class Tagesberechnung
 
         if (e.IstAbgeschlossen && e.SollMinuten > 0 && e.Buchungen.Count == 0 && e.Abwesenheit is null)
         {
-            r.Hinweise.Add(new Regelhinweis(Regelcodes.FehltUnentschuldigt, "Fehlt unentschuldigt"));
+            r.Hinweise.Add(new Regelhinweis(Regelcodes.FehltUnentschuldigt, T("Fehlt unentschuldigt")));
         }
 
         return r;

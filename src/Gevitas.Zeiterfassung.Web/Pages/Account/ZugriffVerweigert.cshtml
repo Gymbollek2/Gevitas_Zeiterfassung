@@ -1,9 +1,9 @@
 @page
 @{
-    ViewData["Title"] = "Kein Zugriff";
+    ViewData["Title"] = T("Kein Zugriff");
 }
 <section class="karte">
-    <h2>Kein Zugriff</h2>
-    <p>Für diese Seite fehlen Ihnen die erforderlichen Berechtigungen.</p>
-    <a class="knopf" asp-page="/Index">Zum Dashboard</a>
+    <h2>@T("Kein Zugriff")</h2>
+    <p>@T("Für diese Seite fehlen Ihnen die erforderlichen Berechtigungen.")</p>
+    <a class="knopf" asp-page="/Index">@T("Zum Dashboard")</a>
 </section>

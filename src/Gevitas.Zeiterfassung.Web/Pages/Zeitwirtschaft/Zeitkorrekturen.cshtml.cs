@@ -5,6 +5,7 @@ using Gevitas.Zeiterfassung.Web.Options;
 using Gevitas.Zeiterfassung.Web.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Pages.Zeitwirtschaft;
 
@@ -149,7 +150,7 @@ public class ZeitkorrekturenModel : AppSeite
 
         if (kappung)
         {
-            Fehler("Bitte das Häkchen bei „Kappung Urlaub Vorjahr“ entfernen, um die Übertragung zu beantragen.");
+            Fehler(T("Bitte das Häkchen bei „Kappung Urlaub Vorjahr“ entfernen, um die Übertragung zu beantragen."));
         }
         else
         {

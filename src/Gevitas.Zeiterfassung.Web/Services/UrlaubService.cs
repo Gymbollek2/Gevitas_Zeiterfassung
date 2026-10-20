@@ -3,6 +3,7 @@ using Gevitas.Zeiterfassung.Web.Domain;
 using Gevitas.Zeiterfassung.Web.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Services;
 
@@ -46,8 +47,7 @@ public sealed class UrlaubService
             var benoetigt = alle.Count(t => t.Year == jahr);
             if (uebersicht.ResturlaubPlan < 0 || benoetigt > verfuegbar)
             {
-                return $"Nicht genügend Urlaubstage für {jahr}: benötigt {benoetigt}, verfügbar {verfuegbar:0.#} " +
-                       $"(Resturlaub aus dem Vorjahr verfällt nach dem {Zeitformat.Datum(uebersicht.Verfall)}).";
+                return F("Nicht genügend Urlaubstage für {0}: benötigt {1}, verfügbar {2:0.#} (Resturlaub aus dem Vorjahr verfällt nach dem {3}).", jahr, benoetigt, verfuegbar, Zeitformat.Datum(uebersicht.Verfall));
             }
         }
 

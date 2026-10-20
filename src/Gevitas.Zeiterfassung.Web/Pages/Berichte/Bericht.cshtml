@@ -2,7 +2,7 @@
 @model Gevitas.Zeiterfassung.Web.Pages.Berichte.BerichtModel
 @{
     var d = Model.Definition;
-    ViewData["Title"] = $"Bericht {d.Nummer} – {d.Bezeichnung}";
+    ViewData["Title"] = $"{T("Bericht")} {d.Nummer} – {T(d.Bezeichnung)}";
     string Iso(DateOnly? x) => x?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
 }
 <section class="karte nicht-drucken">
@@ -11,7 +11,7 @@
         @if (Model.PersonWaehlbar)
         {
             <label class="feld">
-                <span>Person</span>
+                <span>@T("Person")</span>
                 <select name="ma">
                     @foreach (var p in Model.Auswahl)
                     {
@@ -22,18 +22,18 @@
         }
         @if (d.MitZeitraum)
         {
-            <label class="feld"><span>Von</span><input type="date" name="von" value="@Iso(Model.Von)" /></label>
-            <label class="feld"><span>Bis</span><input type="date" name="bis" value="@Iso(Model.Bis)" /></label>
+            <label class="feld"><span>@T("Von")</span><input type="date" name="von" value="@Iso(Model.Von)" /></label>
+            <label class="feld"><span>@T("Bis")</span><input type="date" name="bis" value="@Iso(Model.Bis)" /></label>
         }
         else if (d.Nummer != 539)
         {
-            <label class="feld"><span>Jahr</span><input type="number" name="jahr" value="@Model.Jahr" min="2000" max="2100" /></label>
+            <label class="feld"><span>@T("Jahr")</span><input type="number" name="jahr" value="@Model.Jahr" min="2000" max="2100" /></label>
         }
         <div class="knopfleiste">
-            <button type="submit" class="knopf">Bericht starten</button>
-            <button type="submit" class="knopf knopf-sekundaer" name="format" value="csv">CSV exportieren</button>
-            <button type="button" class="knopf knopf-sekundaer" data-drucken>Drucken / PDF</button>
-            <a class="knopf knopf-sekundaer" asp-page="/Berichte/Index">Alle Berichte</a>
+            <button type="submit" class="knopf">@T("Bericht starten")</button>
+            <button type="submit" class="knopf knopf-sekundaer" name="format" value="csv">@T("CSV exportieren")</button>
+            <button type="button" class="knopf knopf-sekundaer" data-drucken>@T("Drucken / PDF")</button>
+            <a class="knopf knopf-sekundaer" asp-page="/Berichte/Index">@T("Alle Berichte")</a>
         </div>
     </form>
 </section>
@@ -43,14 +43,14 @@
     <section class="karte">
         <div class="karte-kopf">
             <div>
-                <h2>@d.Nummer – @d.Bezeichnung</h2>
+                <h2>@d.Nummer – @T(d.Bezeichnung)</h2>
                 <span class="feld-hilfe">@daten.Untertitel</span>
             </div>
         </div>
 
         @if (daten.Zeilen.Count == 0)
         {
-            <div class="hinweis hinweis-erfolg">Keine Einträge im gewählten Zeitraum.</div>
+            <div class="hinweis hinweis-erfolg">@T("Keine Einträge im gewählten Zeitraum.")</div>
         }
         else
         {

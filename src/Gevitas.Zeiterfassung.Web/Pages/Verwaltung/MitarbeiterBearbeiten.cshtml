@@ -1,23 +1,23 @@
 @page "{id:int?}"
 @model Gevitas.Zeiterfassung.Web.Pages.Verwaltung.MitarbeiterBearbeitenModel
 @{
-    ViewData["Title"] = Model.IstNeu ? "Mitarbeiter anlegen" : "Mitarbeiter bearbeiten";
+    ViewData["Title"] = Model.IstNeu ? T("Mitarbeiter anlegen") : T("Mitarbeiter bearbeiten");
 }
 <section class="karte">
     <form method="post" class="formular">
         <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
         <input type="hidden" asp-for="Eingabe.Id" />
 
-        <h2>Stammdaten</h2>
+        <h2>@T("Stammdaten")</h2>
         <div class="formular-raster">
-            <label class="feld"><span>Personalnummer</span><input asp-for="Eingabe.Personalnummer" required /></label>
-            <label class="feld"><span>Benutzername</span><input asp-for="Eingabe.Benutzername" required autocomplete="off" /></label>
-            <label class="feld"><span>Vorname</span><input asp-for="Eingabe.Vorname" required /></label>
-            <label class="feld"><span>Nachname</span><input asp-for="Eingabe.Nachname" required /></label>
-            <label class="feld"><span>E-Mail</span><input asp-for="Eingabe.Email" type="email" /></label>
-            <label class="feld"><span>Abteilung</span><input asp-for="Eingabe.Abteilung" /></label>
+            <label class="feld"><span>@T("Personalnummer")</span><input asp-for="Eingabe.Personalnummer" required /></label>
+            <label class="feld"><span>@T("Benutzername")</span><input asp-for="Eingabe.Benutzername" required autocomplete="off" /></label>
+            <label class="feld"><span>@T("Vorname")</span><input asp-for="Eingabe.Vorname" required /></label>
+            <label class="feld"><span>@T("Nachname")</span><input asp-for="Eingabe.Nachname" required /></label>
+            <label class="feld"><span>@T("E-Mail")</span><input asp-for="Eingabe.Email" type="email" /></label>
+            <label class="feld"><span>@T("Abteilung")</span><input asp-for="Eingabe.Abteilung" /></label>
             <label class="feld">
-                <span>Rolle</span>
+                <span>@T("Rolle")</span>
                 <select asp-for="Eingabe.Rolle">
                     @foreach (var rolle in Enum.GetValues<Rolle>())
                     {
@@ -25,20 +25,20 @@
                     }
                 </select>
             </label>
-            <label class="feld"><span>Eintrittsdatum</span><input asp-for="Eingabe.Eintrittsdatum" type="date" /></label>
+            <label class="feld"><span>@T("Eintrittsdatum")</span><input asp-for="Eingabe.Eintrittsdatum" type="date" /></label>
         </div>
 
-        <h2>Arbeitszeit &amp; Genehmigung</h2>
+        <h2>@T("Arbeitszeit & Genehmigung")</h2>
         <div class="formular-raster">
             <label class="feld">
-                <span>Sollarbeitszeit pro Tag (Std:Min)</span>
+                <span>@T("Sollarbeitszeit pro Tag (Std:Min)")</span>
                 <input asp-for="Eingabe.SollProTag" placeholder="8:00" />
             </label>
-            <label class="feld"><span>Jahresurlaub (Tage)</span><input asp-for="Eingabe.Jahresurlaub" type="number" min="0" max="60" /></label>
+            <label class="feld"><span>@T("Jahresurlaub (Tage)")</span><input asp-for="Eingabe.Jahresurlaub" type="number" min="0" max="60" /></label>
             <label class="feld">
-                <span>Disziplinarische Führungskraft</span>
+                <span>@T("Disziplinarische Führungskraft")</span>
                 <select asp-for="Eingabe.VorgesetzterId">
-                    <option value="">– keine –</option>
+                    <option value="">@T("– keine –")</option>
                     @foreach (var m in Model.Auswahl)
                     {
                         <option value="@m.Id" selected="@(Model.Eingabe.VorgesetzterId == m.Id)">@m.AnzeigeName</option>
@@ -46,31 +46,31 @@
                 </select>
             </label>
             <label class="feld">
-                <span>Abweichender Genehmiger (Vertretung)</span>
+                <span>@T("Abweichender Genehmiger (Vertretung)")</span>
                 <select asp-for="Eingabe.AbweichenderGenehmigerId">
-                    <option value="">– keiner –</option>
+                    <option value="">@T("– keiner –")</option>
                     @foreach (var m in Model.Auswahl)
                     {
                         <option value="@m.Id" selected="@(Model.Eingabe.AbweichenderGenehmigerId == m.Id)">@m.AnzeigeName</option>
                     }
                 </select>
-                <span class="feld-hilfe">Wird statt der Führungskraft als Genehmiger verwendet.</span>
+                <span class="feld-hilfe">@T("Wird statt der Führungskraft als Genehmiger verwendet.")</span>
             </label>
         </div>
 
-        <h2>Zugang</h2>
+        <h2>@T("Zugang")</h2>
         <div class="formular-raster">
             <label class="feld">
-                <span>@(Model.IstNeu ? "Startpasswort" : "Passwort zurücksetzen (optional)")</span>
+                <span>@(Model.IstNeu ? T("Startpasswort") : T("Passwort zurücksetzen (optional)"))</span>
                 <input asp-for="Eingabe.NeuesPasswort" type="password" autocomplete="new-password" />
-                <span class="feld-hilfe">Muss bei der nächsten Anmeldung geändert werden.</span>
+                <span class="feld-hilfe">@T("Muss bei der nächsten Anmeldung geändert werden.")</span>
             </label>
-            <label class="checkbox"><input asp-for="Eingabe.Aktiv" type="checkbox" /> Zugang aktiv</label>
+            <label class="checkbox"><input asp-for="Eingabe.Aktiv" type="checkbox" /> @T("Zugang aktiv")</label>
         </div>
 
         <div class="knopfleiste">
-            <button type="submit" class="knopf">Speichern</button>
-            <a class="knopf knopf-sekundaer" asp-page="/Verwaltung/Mitarbeiter">Abbrechen</a>
+            <button type="submit" class="knopf">@T("Speichern")</button>
+            <a class="knopf knopf-sekundaer" asp-page="/Verwaltung/Mitarbeiter">@T("Abbrechen")</a>
         </div>
     </form>
 </section>

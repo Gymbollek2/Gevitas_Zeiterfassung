@@ -1,27 +1,24 @@
 @page
 @{
-    ViewData["Title"] = "Berichte";
+    ViewData["Title"] = T("Berichte");
 }
 <section class="karte">
-    <h2><svg class="icon"><use href="#i-bericht" /></svg>Verfügbare Berichte</h2>
+    <h2><svg class="icon"><use href="#i-bericht" /></svg>@T("Verfügbare Berichte")</h2>
     <div class="tabellen-rahmen">
         <table class="tabelle">
-            <thead><tr><th>Nr.</th><th>Bezeichnung</th><th>Inhalt</th><th></th></tr></thead>
+            <thead><tr><th>@T("Nr.")</th><th>@T("Bezeichnung")</th><th>@T("Inhalt")</th><th></th></tr></thead>
             <tbody>
                 @foreach (var b in BerichtService.Definitionen)
                 {
                     <tr>
                         <td>@b.Nummer</td>
-                        <td><strong>@b.Bezeichnung</strong></td>
-                        <td>@b.Beschreibung</td>
-                        <td class="aktionen"><a class="knopf knopf-klein" asp-page="/Berichte/Bericht" asp-route-nr="@b.Nummer">Öffnen</a></td>
+                        <td><strong>@T(b.Bezeichnung)</strong></td>
+                        <td>@T(b.Beschreibung)</td>
+                        <td class="aktionen"><a class="knopf knopf-klein" asp-page="/Berichte/Bericht" asp-route-nr="@b.Nummer">@T("Öffnen")</a></td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
-    <p class="feld-hilfe">
-        Bei Mitarbeitenden ist automatisch die eigene Person hinterlegt. Führungskräfte können für ihre Mitarbeitenden
-        nur Berichte mit Kontensalden (Saldo-Ampel, Urlaubsübersicht) aufrufen, nicht die Einzelbuchungen.
-    </p>
+    <p class="feld-hilfe">@T("Bei Mitarbeitenden ist automatisch die eigene Person hinterlegt. Führungskräfte können für ihre Mitarbeitenden nur Berichte mit Kontensalden (Saldo-Ampel, Urlaubsübersicht) aufrufen, nicht die Einzelbuchungen.")</p>
 </section>

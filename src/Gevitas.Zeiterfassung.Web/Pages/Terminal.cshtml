@@ -1,14 +1,15 @@
 @page
 @model TerminalModel
 @{
-    ViewData["Title"] = "Terminal";
+    ViewData["Title"] = T("Terminal");
+    var std = T("Std.");
 }
 <section class="karte">
     <div class="karte-kopf">
-        <h2><svg class="icon"><use href="#i-terminal" /></svg>Terminal <span data-live-uhr class="plakette"></span></h2>
+        <h2><svg class="icon"><use href="#i-terminal" /></svg>@T("Terminal") <span data-live-uhr data-sprache="@Texte.Sprache" class="plakette"></span></h2>
         <partial name="_TerminalStatus" model="Model.Stand" />
     </div>
-    <p class="feld-hilfe">Gebucht wird immer die aktuelle Uhrzeit. „Ändern“ schließt die laufende Buchung ab und beginnt sofort eine neue (Wechselbuchung).</p>
+    <p class="feld-hilfe">@T("Gebucht wird immer die aktuelle Uhrzeit. „Ändern“ schließt die laufende Buchung ab und beginnt sofort eine neue (Wechselbuchung).")</p>
 
     <div class="terminal">
         @foreach (var (aktion, text, icon, primaer) in new[]
@@ -27,7 +28,7 @@
                 <input type="hidden" name="aktion" value="@aktion" />
                 <button type="submit" class="terminal-knopf @(primaer ? "primaer" : "")">
                     <svg class="icon"><use href="#@icon" /></svg>
-                    @text
+                    @T(text)
                 </button>
             </form>
         }
@@ -35,10 +36,10 @@
 </section>
 
 <section class="karte">
-    <h2>Heute</h2>
+    <h2>@T("Heute")</h2>
     <div class="kennzahlen">
-        <div class="kennzahl"><span class="kennzahl-label">Arbeitszeit</span><span class="kennzahl-wert">@Zeitformat.Dauer(Model.Stand.HeuteArbeitszeit) <span class="kennzahl-einheit">Std.</span></span></div>
-        <div class="kennzahl"><span class="kennzahl-label">Sollstunden</span><span class="kennzahl-wert">@Zeitformat.Dauer(Model.Stand.HeuteSoll) <span class="kennzahl-einheit">Std.</span></span></div>
-        <div class="kennzahl @(Model.Stand.Saldo < 0 ? "negativ" : "")"><span class="kennzahl-label">Saldo</span><span class="kennzahl-wert">@Zeitformat.Dauer(Model.Stand.Saldo) <span class="kennzahl-einheit">Std.</span></span></div>
+        <div class="kennzahl"><span class="kennzahl-label">@T("Arbeitszeit")</span><span class="kennzahl-wert">@Zeitformat.Dauer(Model.Stand.HeuteArbeitszeit) <span class="kennzahl-einheit">@std</span></span></div>
+        <div class="kennzahl"><span class="kennzahl-label">@T("Sollstunden")</span><span class="kennzahl-wert">@Zeitformat.Dauer(Model.Stand.HeuteSoll) <span class="kennzahl-einheit">@std</span></span></div>
+        <div class="kennzahl @(Model.Stand.Saldo < 0 ? "negativ" : "")"><span class="kennzahl-label">@T("Saldo")</span><span class="kennzahl-wert">@Zeitformat.Dauer(Model.Stand.Saldo) <span class="kennzahl-einheit">@std</span></span></div>
     </div>
 </section>
