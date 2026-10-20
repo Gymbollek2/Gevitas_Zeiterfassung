@@ -481,6 +481,7 @@ h3 { font-size: 1.02rem; }
 }
 
 @media (max-width: 520px) {
+    .nicht-mobil { display: none; }
     body { font-size: 14px; }
     .seitentitel { font-size: 1.05rem; }
     .monatskalender .wochentag { font-size: .7rem; padding: .3rem 0; }

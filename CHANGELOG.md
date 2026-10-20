@@ -4,6 +4,20 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.4.0] – 2026-10-20
+
+### Hinzugefügt
+- Abwesenheiten beantragen (alle Abwesenheitsarten aus der Konfiguration) über Monats- und Jahreskalender oder direkt aus den Zeitkorrekturen
+- Genehmigungsworkflow: disziplinarische Führungskraft, Weiterleitung an die nächsthöhere Führungskraft bei deren Abwesenheit, abweichender Genehmiger, Fallback Personalabteilung
+- Antragsübersicht mit Filter (Antragsteller/Genehmiger, Offen/Alle/Erledigt, ab Datum), Einzelgenehmigung, Begründungspflicht bei Ablehnung
+- Löschen offener Anträge sowie Löschantrag (inverser Antrag) für genehmigte Abwesenheiten
+- Freigaben „Arbeit > 10 Std.“, „Arbeit vor/nach Rahmen“ – sofort gutgeschrieben, bei Ablehnung wieder abgezogen
+- Übertragung des Resturlaubs bis 31.05. mit zweistufiger Genehmigung (Antragszeitraum 01.01.–01.03.)
+- Urlaubsberechnung: Jahresanspruch (anteilig im Eintrittsjahr), Übertrag, Verfall, Urlaubssaldo und Resturlaub (Plan zum 31.12.)
+- Prüfung „Krank ohne Attest“ für max. 3 zusammenhängende Kalendertage, Hinweis auf „Krank mit eAU“
+- Umbuchungen Sonderarbeitszeit/Wegezeit auf den Gleitzeitsaldo; Kontokorrekturen und Stornos für die Personalabteilung
+- Benachrichtigungen im Dashboard und optional per E-Mail (SMTP in der appsettings.json)
+
 ## [0.3.0] – 2026-10-20
 
 ### Hinzugefügt

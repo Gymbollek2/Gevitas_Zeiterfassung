@@ -160,6 +160,10 @@
                                     @if (i == 0)
                                     {
                                         <a class="knopf knopf-sekundaer knopf-klein knopf-icon" href="@tagesLink" title="Details, Verlauf und Bemerkungen" aria-label="Details"><svg class="icon"><use href="#i-details" /></svg></a>
+                                        @if (Model.IstEigeneAnsicht)
+                                        {
+                                            <a class="knopf knopf-sekundaer knopf-klein knopf-icon" asp-page="/Antraege/Abwesenheit" asp-route-von="@datumWert" asp-route-bis="@datumWert" title="An- oder Abwesenheit hinzufügen" aria-label="Abwesenheit hinzufügen"><svg class="icon"><use href="#i-kalender" /></svg></a>
+                                        }
                                         @if (bearbeitbar && !neueZeile)
                                         {
                                             <a class="knopf knopf-erfolg knopf-klein knopf-icon" href="@Url.Page(seite, Model.RouteFuer(Model.MonatsBeginn, tag.Datum, neu: true))" title="Intervall hinzufügen" aria-label="Intervall hinzufügen"><svg class="icon"><use href="#i-plus" /></svg></a>
@@ -232,6 +236,76 @@
                     }
                 }
             </div>
+
+            @if (Model.IstEigeneAnsicht && !auswahl.IstZukunft)
+            {
+                var b = auswahl.Berechtigung;
+                <div class="detail-abschnitt">
+                    <h3>Berechtigungen</h3>
+                    <form method="post" asp-page-handler="Freigabe" class="formular">
+                        <input type="hidden" name="datum" value="@auswahl.Datum.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" />
+                        <input type="hidden" name="Ma" value="@Model.Ma" />
+                        <label class="checkbox"><input type="checkbox" name="ueber10" value="true" checked="@(b?.ArbeitUeber10Stunden == true)" disabled="@(b?.ArbeitUeber10Stunden == true)" /> Arbeit &gt; 10 Std.</label>
+                        <label class="checkbox"><input type="checkbox" name="nachRahmen" value="true" checked="@(b?.ArbeitNachRahmen == true)" disabled="@(b?.ArbeitNachRahmen == true)" /> Arbeit nach Rahmen</label>
+                        <label class="checkbox"><input type="checkbox" name="vorRahmen" value="true" checked="@(b?.ArbeitVorRahmen == true)" disabled="@(b?.ArbeitVorRahmen == true)" /> Arbeit vor Rahmen</label>
+                        <textarea class="eingabe" name="bemerkung" rows="2" placeholder="Bemerkung (z. B. Sondereinsatz)"></textarea>
+                        <button type="submit" class="knopf knopf-klein">Antrag stellen</button>
+                    </form>
+                    <p class="feld-hilfe">Die Zeiten werden durch die Antragstellung direkt gutgeschrieben, bei Ablehnung aber wieder abgezogen. Auch Wegezeit nach Rahmen benötigt diesen Antrag.</p>
+                </div>
+
+                @if (auswahl.IstHeute && (Model.UebertragZeitraumAktiv || Model.UebertragBeantragt))
+                {
+                    <div class="detail-abschnitt">
+                        <h3>Resturlaub Vorjahr</h3>
+                        <form method="post" asp-page-handler="Urlaubsuebertrag" class="formular" data-bestaetigen="Übertragung des Resturlaubs bis @Zeitformat.Datum(UrlaubOptions.Datum(Model.Heute.Year, Model.Optionen.Urlaub.VerlaengerterVerfall)) beantragen?" data-bestaetigen-titel="Antrag stellen">
+                            <input type="hidden" name="datum" value="@auswahl.Datum.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" />
+                            <label class="checkbox"><input type="checkbox" name="kappung" value="true" checked="@(!Model.UebertragBeantragt)" disabled="@Model.UebertragBeantragt" /> Kappung Urlaub Vorjahr</label>
+                            @if (!Model.UebertragBeantragt)
+                            {
+                                <textarea class="eingabe" name="Bemerkung" rows="2" placeholder="Grund für die Aufhebung der Urlaubskappung (optional)"></textarea>
+                                <button type="submit" class="knopf knopf-klein">Antrag stellen</button>
+                            }
+                        </form>
+                        <p class="feld-hilfe">
+                            @(Model.UebertragBeantragt
+                                ? "Die Übertragung wurde bereits beantragt."
+                                : "Häkchen entfernen und „Antrag stellen“ – der Resturlaub kann dann bis zum " + Zeitformat.Datum(UrlaubOptions.Datum(Model.Heute.Year, Model.Optionen.Urlaub.VerlaengerterVerfall)) + " genommen werden (zweistufige Genehmigung).")
+                        </p>
+                    </div>
+                }
+
+                <div class="detail-abschnitt">
+                    <h3>Kontobuchungen</h3>
+                    <form method="post" asp-page-handler="Umbuchung" class="formular" data-bestaetigen="Guthaben auf den Gleitzeitsaldo umbuchen? Eine fehlerhafte Umbuchung kann nur die Personalabteilung rückgängig machen." data-bestaetigen-titel="Umbuchung bestätigen">
+                        <input type="hidden" name="datum" value="@auswahl.Datum.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" />
+                        <label class="feld">
+                            <span>Kontobuchungsformular</span>
+                            <select name="quelle">
+                                <option value="@Konto.Sonderarbeitszeit">Umbuchung Sonderarbeitszeitkonto auf Saldo (verfügbar @Zeitformat.Dauer(auswahl.SonderarbeitszeitKontostand))</option>
+                                <option value="@Konto.Wegezeit">Umbuchung Wegezeit auf Saldo (verfügbar @Zeitformat.Dauer(auswahl.WegezeitKontostand))</option>
+                            </select>
+                        </label>
+                        <label class="feld"><span>Kontobuchungswert (Std:Min)</span><input class="eingabe" name="stunden" placeholder="0:00" required /></label>
+                        <label class="feld">
+                            <span>Datum</span>
+                            <input class="eingabe" type="date" name="buchungsdatum" value="@Model.Heute.AddDays(-1).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" max="@Model.Heute.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" />
+                            <span class="feld-hilfe">Am besten den Vortag wählen – sonst ist die Umbuchung erst am Folgetag sichtbar.</span>
+                        </label>
+                        <textarea class="eingabe" name="Bemerkung" rows="2" placeholder="Bemerkung (optional)"></textarea>
+                        <button type="submit" class="knopf knopf-klein">Speichern</button>
+                    </form>
+                    @if (auswahl.Kontobuchungen.Count > 0)
+                    {
+                        <ul class="detail-liste" style="margin-top:.75rem">
+                            @foreach (var k in auswahl.Kontobuchungen)
+                            {
+                                <li><span>@k.Text (@k.Konto.Text())@(k.Storniert ? " – storniert" : "")</span><strong>@Zeitformat.Dauer(k.Minuten)</strong></li>
+                            }
+                        </ul>
+                    }
+                </div>
+            }
 
             <div class="detail-abschnitt">
                 <h3><svg class="icon"><use href="#i-notiz" /></svg> Tagesbezogene Bemerkung</h3>

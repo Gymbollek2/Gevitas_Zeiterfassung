@@ -13,18 +13,24 @@ public class ZeitkorrekturenModel : AppSeite
     private readonly KontenService _konten;
     private readonly BuchungsService _buchungen;
     private readonly MitarbeiterService _mitarbeiter;
+    private readonly AntragsService _antraege;
+    private readonly KontobuchungService _kontobuchungen;
     private readonly IAppUhr _uhr;
 
     public ZeitkorrekturenModel(
         KontenService konten,
         BuchungsService buchungen,
         MitarbeiterService mitarbeiter,
+        AntragsService antraege,
+        KontobuchungService kontobuchungen,
         IAppUhr uhr,
         IOptions<ZeiterfassungOptions> optionen)
     {
         _konten = konten;
         _buchungen = buchungen;
         _mitarbeiter = mitarbeiter;
+        _antraege = antraege;
+        _kontobuchungen = kontobuchungen;
         _uhr = uhr;
         Optionen = optionen.Value;
     }
@@ -54,6 +60,21 @@ public class ZeitkorrekturenModel : AppSeite
 
     public int ZielId => Ma is not null && User.IstPersonal() ? Ma.Value : BenutzerId;
 
+    /// <summary>Anträge und Umbuchungen stellt jede Person nur für sich selbst.</summary>
+    public bool IstEigeneAnsicht => ZielId == BenutzerId;
+
+    public bool UebertragZeitraumAktiv
+    {
+        get
+        {
+            var von = UrlaubOptions.Datum(Heute.Year, Optionen.Urlaub.UebertragAntragVon);
+            var bis = UrlaubOptions.Datum(Heute.Year, Optionen.Urlaub.UebertragAntragBis);
+            return Heute >= von && Heute <= bis;
+        }
+    }
+
+    public bool UebertragBeantragt { get; private set; }
+
     public bool IstBearbeitbar(DateOnly datum) =>
         datum <= Heute && (OhneZeitgrenze || datum >= Heute.AddDays(-Optionen.MaxRueckwirkendeTage));
 
@@ -81,6 +102,7 @@ public class ZeitkorrekturenModel : AppSeite
         Tag = gewaehlt;
         Auswahl = Tage.FirstOrDefault(d => d.Datum == gewaehlt);
         Verlauf = await _buchungen.VerlaufAsync(ZielId, gewaehlt, HttpContext.RequestAborted);
+        UebertragBeantragt = await _antraege.UrlaubsuebertragBeantragtAsync(ZielId, Heute.Year, HttpContext.RequestAborted);
         return Page();
     }
 
@@ -104,6 +126,47 @@ public class ZeitkorrekturenModel : AppSeite
         }
 
         Melden(await _buchungen.BemerkungSpeichernAsync(ZielId, datum, text, HttpContext.RequestAborted));
+        return Zurueck(datum);
+    }
+
+    public async Task<IActionResult> OnPostFreigabeAsync(DateOnly datum, bool ueber10, bool vorRahmen, bool nachRahmen, string? bemerkung)
+    {
+        if (!IstEigeneAnsicht)
+        {
+            return Forbid();
+        }
+
+        Melden(await _antraege.TagesfreigabeBeantragenAsync(BenutzerId, datum, ueber10, vorRahmen, nachRahmen, bemerkung, HttpContext.RequestAborted));
+        return Zurueck(datum);
+    }
+
+    public async Task<IActionResult> OnPostUrlaubsuebertragAsync(DateOnly datum, bool kappung, string? bemerkung)
+    {
+        if (!IstEigeneAnsicht)
+        {
+            return Forbid();
+        }
+
+        if (kappung)
+        {
+            Fehler("Bitte das Häkchen bei „Kappung Urlaub Vorjahr“ entfernen, um die Übertragung zu beantragen.");
+        }
+        else
+        {
+            Melden(await _antraege.UrlaubsuebertragBeantragenAsync(BenutzerId, bemerkung, HttpContext.RequestAborted));
+        }
+
+        return Zurueck(datum);
+    }
+
+    public async Task<IActionResult> OnPostUmbuchungAsync(DateOnly datum, Konto quelle, string? stunden, DateOnly buchungsdatum, string? bemerkung)
+    {
+        if (!IstEigeneAnsicht)
+        {
+            return Forbid();
+        }
+
+        Melden(await _kontobuchungen.UmbuchenAsync(BenutzerId, quelle, stunden, buchungsdatum, bemerkung, BenutzerId, HttpContext.RequestAborted));
         return Zurueck(datum);
     }
 

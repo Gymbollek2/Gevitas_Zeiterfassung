@@ -29,6 +29,13 @@ public static class DiensteErweiterungen
             ArbeitszeitRegeln.Aus(sp.GetRequiredService<IOptions<ZeiterfassungOptions>>().Value)));
         services.AddScoped<KontenService>();
         services.AddScoped<BuchungsService>();
+
+        services.AddSingleton<IEmailVersand, SmtpEmailVersand>();
+        services.AddScoped<BenachrichtigungsService>();
+        services.AddScoped<UrlaubService>();
+        services.AddScoped<AntragsService>();
+        services.AddScoped<KontobuchungService>();
+        services.AddScoped<KalenderService>();
         return services;
     }
 }

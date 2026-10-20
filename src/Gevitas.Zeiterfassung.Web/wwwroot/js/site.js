@@ -14,7 +14,7 @@
     // Aktiven Menüpunkt markieren
     var pfad = window.location.pathname.toLowerCase();
     document.querySelectorAll(".nav-link").forEach(function (link) {
-        var ziel = (link.getAttribute("href") || "").toLowerCase();
+        var ziel = (link.getAttribute("href") || "").toLowerCase().split("?")[0];
         if ((ziel === "/" && pfad === "/") || (ziel !== "/" && pfad.indexOf(ziel) === 0)) {
             link.classList.add("aktiv");
         }

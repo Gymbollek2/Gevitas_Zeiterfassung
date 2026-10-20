@@ -1,0 +1,108 @@
+@page
+@model Gevitas.Zeiterfassung.Web.Pages.Verwaltung.KontokorrekturenModel
+@{
+    ViewData["Title"] = "Kontokorrekturen";
+    var iso = Model.Heute.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+}
+<section class="karte">
+    <form method="get" class="filterleiste">
+        <label class="feld">
+            <span>Mitarbeiter/in</span>
+            <select name="ma" data-auto-absenden>
+                @foreach (var p in Model.Personen)
+                {
+                    <option value="@p.Id" selected="@(p.Id == Model.Ma)">@p.AnzeigeName (@p.Personalnummer)</option>
+                }
+            </select>
+        </label>
+        <noscript><button type="submit" class="knopf">Anzeigen</button></noscript>
+        @if (Model.Person is not null)
+        {
+            <a class="knopf knopf-sekundaer" asp-page="/Zeitwirtschaft/Zeitkorrekturen" asp-route-ma="@Model.Person.Id">Zeitkorrekturen dieser Person</a>
+        }
+    </form>
+
+    @if (Model.Stand is not null)
+    {
+        <div class="kennzahlen">
+            <div class="kennzahl"><span class="kennzahl-label">Gleitzeitsaldo</span><span class="kennzahl-wert">@Zeitformat.Dauer(Model.Stand.Saldo)</span></div>
+            <div class="kennzahl"><span class="kennzahl-label">Wegezeit</span><span class="kennzahl-wert">@Zeitformat.Dauer(Model.Stand.Wegezeit)</span></div>
+            <div class="kennzahl"><span class="kennzahl-label">Sonderarbeitszeit</span><span class="kennzahl-wert">@Zeitformat.Dauer(Model.Stand.Sonderarbeitszeit)</span></div>
+        </div>
+    }
+</section>
+
+@if (Model.Person is not null)
+{
+    <div class="raster raster-2">
+        <section class="karte">
+            <h2>Korrektur buchen</h2>
+            <form method="post" asp-page-handler="Korrektur" class="formular">
+                <input type="hidden" name="Ma" value="@Model.Ma" />
+                <div class="formular-raster">
+                    <label class="feld">
+                        <span>Konto</span>
+                        <select name="konto">
+                            @foreach (var k in Enum.GetValues<Konto>())
+                            {
+                                <option value="@k">@k.Text()</option>
+                            }
+                        </select>
+                    </label>
+                    <label class="feld"><span>Wert (Std:Min, negativ mit „-“)</span><input name="stunden" placeholder="z. B. 2:30 oder -1:15" required /></label>
+                    <label class="feld"><span>Datum</span><input type="date" name="datum" value="@iso" required /></label>
+                </div>
+                <label class="feld"><span>Begründung (Pflicht)</span><textarea name="bemerkung" rows="2" required></textarea></label>
+                <div class="knopfleiste"><button type="submit" class="knopf">Buchen</button></div>
+                <p class="feld-hilfe">Verwendung z. B. für Sonderarbeitszeit, Zuschläge aus Sondereinsätzen oder die Übernahme von Salden.</p>
+            </form>
+        </section>
+
+        <section class="karte">
+            <h2>Kontobuchungen</h2>
+            @if (Model.Buchungen.Count == 0)
+            {
+                <p class="leer">Keine Kontobuchungen vorhanden.</p>
+            }
+            else
+            {
+                <div class="tabellen-rahmen">
+                    <table class="tabelle">
+                        <thead><tr><th>Datum</th><th>Konto</th><th>Text</th><th class="zahl">Wert</th><th></th></tr></thead>
+                        <tbody>
+                            @foreach (var b in Model.Buchungen)
+                            {
+                                <tr class="@(b.Storniert ? "frei" : "")">
+                                    <td>@Zeitformat.Datum(b.Datum)</td>
+                                    <td>@b.Konto.Text()</td>
+                                    <td>
+                                        @b.Text
+                                        @if (!string.IsNullOrEmpty(b.Bemerkung))
+                                        {
+                                            <br /><em>@b.Bemerkung</em>
+                                        }
+                                    </td>
+                                    <td class="zahl">@Zeitformat.Dauer(b.Minuten)</td>
+                                    <td class="aktionen">
+                                        @if (b.Storniert)
+                                        {
+                                            <span class="plakette plakette-grau">storniert</span>
+                                        }
+                                        else
+                                        {
+                                            <form method="post" asp-page-handler="Storno" data-bestaetigen="Diese Buchung (bei Umbuchungen beide Teilbuchungen) stornieren?" data-bestaetigen-titel="Stornieren">
+                                                <input type="hidden" name="vorgang" value="@b.Vorgang" />
+                                                <input type="hidden" name="Ma" value="@Model.Ma" />
+                                                <button type="submit" class="knopf knopf-sekundaer knopf-klein">Stornieren</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+}

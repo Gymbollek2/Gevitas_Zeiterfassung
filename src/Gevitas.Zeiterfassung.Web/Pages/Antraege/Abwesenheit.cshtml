@@ -1,0 +1,60 @@
+@page
+@model Gevitas.Zeiterfassung.Web.Pages.Antraege.AbwesenheitModel
+@{
+    ViewData["Title"] = "Abwesenheit eintragen";
+    string Iso(DateOnly? d) => d?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty;
+}
+<div class="raster raster-2">
+    <section class="karte">
+        <h2><svg class="icon"><use href="#i-kalender" /></svg>Abwesenheit beantragen</h2>
+        <form method="post" class="formular">
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+            <input type="hidden" name="Zurueck" value="@Model.Zurueck" />
+
+            <div class="formular-raster">
+                <label class="feld"><span>Beginn</span><input type="date" name="Von" value="@Iso(Model.Von)" required /></label>
+                <label class="feld"><span>Ende</span><input type="date" name="Bis" value="@Iso(Model.Bis)" required /></label>
+            </div>
+
+            <label class="feld">
+                <span>Art der Abwesenheit (Pflichtfeld)</span>
+                <select name="Art" required>
+                    <option value="">Art der Abwesenheit wählen …</option>
+                    @foreach (var art in Model.Arten)
+                    {
+                        <option value="@art.Code" selected="@(Model.Art == art.Code)">@art.Name (@art.Code)</option>
+                    }
+                </select>
+            </label>
+
+            <label class="feld">
+                <span>Bemerkung</span>
+                <textarea name="Bemerkung" rows="3">@Model.Bemerkung</textarea>
+            </label>
+
+            <div class="knopfleiste">
+                <button type="submit" class="knopf">Abwesenheit eintragen</button>
+                <a class="knopf knopf-sekundaer" asp-page="/Zeitwirtschaft/Monatskalender">Abbrechen</a>
+            </div>
+            <p class="feld-hilfe">Der Antrag wird an Ihre Führungskraft gesendet, die per Benachrichtigung zur Genehmigung aufgefordert wird.</p>
+        </form>
+    </section>
+
+    <section class="karte">
+        <h2>Urlaub @Model.Urlaub.Jahr</h2>
+        <ul class="detail-liste">
+            <li><span>Jahresanspruch</span><strong>@Zeitformat.Tage(Model.Urlaub.Anspruch) Tage</strong></li>
+            <li><span>Übertrag aus Vorjahr (verfällt nach @Zeitformat.Datum(Model.Urlaub.Verfall))</span><strong>@Zeitformat.Tage(Model.Urlaub.Uebertrag) Tage</strong></li>
+            <li><span>Urlaubssaldo (tagesaktuell)</span><strong>@Zeitformat.Tage(Model.Urlaub.Urlaubssaldo) Tage</strong></li>
+            <li><span>Resturlaub (Plan zum 31.12.)</span><strong>@Zeitformat.Tage(Model.Urlaub.ResturlaubPlan) Tage</strong></li>
+        </ul>
+
+        <h3 style="margin-top:1.25rem">Hinweise</h3>
+        <ul class="feld-hilfe">
+            <li><strong>Krank ohne Attest</strong> ist für maximal @Model.Optionen.KrankOhneAttestMaxTage zusammenhängende Kalendertage möglich. Längere Arbeitsunfähigkeiten sind per ärztlicher Bescheinigung (eAU) nachzuweisen.</li>
+            <li>Bis die Bestätigung der eAU vorliegt, wählen Sie bitte <strong>Krank mit eAU</strong> – so läuft Ihr Arbeitszeitkonto nicht ins Minus. Die Personalabteilung bucht nach Eingang um.</li>
+            <li><strong>Sonderurlaub</strong> für Eheschließung, Niederkunft, goldene Hochzeit und Umzug ist per Urkunde bei der Personalabteilung nachzuweisen.</li>
+            <li>Arbeiten Sie an einem Urlaubs- oder Krankheitstag doch, stornieren Sie bitte die Abwesenheit – sonst wird die Arbeitszeit nicht gutgeschrieben.</li>
+        </ul>
+    </section>
+</div>

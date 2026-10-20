@@ -1,0 +1,45 @@
+@page
+@model Gevitas.Zeiterfassung.Web.Pages.Antraege.AbwesenheitLoeschenModel
+@{
+    ViewData["Title"] = "Abwesenheit löschen";
+}
+<section class="karte">
+    <h2><svg class="icon"><use href="#i-loeschen" /></svg>An- oder Abwesenheit löschen</h2>
+    <p class="feld-hilfe">
+        Noch nicht genehmigte Abwesenheiten werden sofort gelöscht. Für bereits genehmigte Abwesenheiten wird ein
+        Löschantrag an Ihre Führungskraft gestellt – erst nach deren Genehmigung wird die Abwesenheit storniert.
+    </p>
+
+    @if (Model.Liste.Count == 0)
+    {
+        <div class="hinweis">Keine (löschbaren) Daten vorhanden.</div>
+    }
+    else
+    {
+        <div class="tabellen-rahmen">
+            <table class="tabelle">
+                <thead>
+                    <tr><th>Zeitraum</th><th>Art</th><th>Status</th><th>Bemerkung</th><th class="aktionen"></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model.Liste)
+                    {
+                        <tr>
+                            <td>@Zeitformat.Datum(a.Von) – @Zeitformat.Datum(a.Bis)</td>
+                            <td><span class="legende-punkt" style="background:@a.Art?.Farbe"></span>@a.Art?.Name (@a.ArtCode)</td>
+                            <td><span class="plakette @(a.Status == AbwesenheitsStatus.Genehmigt ? "plakette-gruen" : "plakette-gelb")">@a.Status.Text()</span></td>
+                            <td>@a.Bemerkung</td>
+                            <td class="aktionen">
+                                <form method="post" data-bestaetigen="@a.Art?.Name vom @Zeitformat.Datum(a.Von) bis @Zeitformat.Datum(a.Bis) löschen?" data-bestaetigen-titel="Eintrag löschen">
+                                    <input type="hidden" name="abwesenheitId" value="@a.Id" />
+                                    <input type="hidden" name="Bemerkung" />
+                                    <button type="submit" class="knopf knopf-gefahr knopf-klein">Eintrag löschen</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

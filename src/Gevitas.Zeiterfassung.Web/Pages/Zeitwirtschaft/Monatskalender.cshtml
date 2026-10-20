@@ -1,0 +1,53 @@
+@page
+@model Gevitas.Zeiterfassung.Web.Pages.Zeitwirtschaft.MonatskalenderModel
+@{
+    ViewData["Title"] = "Monatskalender";
+    var m = Model.MonatsBeginn;
+    var wochentage = new[] { "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag" };
+}
+<section class="karte">
+    <div class="karte-kopf">
+        <div class="monatsnavigation">
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatskalenderModel.MonatIso(m.AddMonths(-1))" aria-label="Vormonat">‹</a>
+            <strong>@Zeitformat.Monatsname(m.Month) @m.Year</strong>
+            <a class="knopf knopf-sekundaer knopf-icon" asp-route-monat="@MonatskalenderModel.MonatIso(m.AddMonths(1))" aria-label="Folgemonat">›</a>
+        </div>
+        <div class="knopfleiste">
+            <a class="knopf" asp-page="/Antraege/Abwesenheit" asp-route-zurueck="monat"><svg class="icon"><use href="#i-plus" /></svg>Eintrag hinzufügen</a>
+            <a class="knopf knopf-gefahr" asp-page="/Antraege/AbwesenheitLoeschen"><svg class="icon"><use href="#i-loeschen" /></svg>Eintrag löschen</a>
+        </div>
+    </div>
+
+    <div class="monatskalender">
+        @foreach (var w in wochentage)
+        {
+            <div class="wochentag">@(w[..2])<span class="nicht-mobil">@(w[2..])</span></div>
+        }
+        @foreach (var tag in Model.Tage)
+        {
+            var klassen = "kalendertag"
+                          + (tag.Datum.Month != m.Month ? " fremd" : "")
+                          + (!tag.IstArbeitstag ? " frei" : "")
+                          + (tag.Datum == Model.Heute ? " heute" : "");
+            <div class="@klassen">
+                <a class="tagnummer" asp-page="/Antraege/Abwesenheit" asp-route-von="@MonatskalenderModel.Iso(tag.Datum)" asp-route-bis="@MonatskalenderModel.Iso(tag.Datum)" asp-route-zurueck="monat" title="Abwesenheit für diesen Tag eintragen">@tag.Datum.Day</a>
+                @if (tag.Feiertag is not null)
+                {
+                    <span class="feiertag-name">@tag.Feiertag</span>
+                }
+                @foreach (var a in tag.Abwesenheiten)
+                {
+                    var beantragt = a.Status == AbwesenheitsStatus.Beantragt;
+                    <span class="kalender-eintrag @(beantragt ? "beantragt" : "")" style="background-color:@a.Art?.Farbe" title="@a.Art?.Name – @a.Status.Text()">
+                        @(a.Art?.Name + (beantragt ? " (beantragt)" : ""))
+                    </span>
+                }
+            </div>
+        }
+    </div>
+    <div class="legende">
+        <span><span class="legende-punkt" style="background:#eef2f7;border:1px solid #d6e2f0"></span>Wochenende/Feiertag</span>
+        <span><span class="legende-punkt" style="background:repeating-linear-gradient(45deg,#c8d6e8 0 3px,#fff 3px 6px)"></span>beantragt (noch nicht genehmigt)</span>
+        <span>Klick auf einen Tag öffnet „Abwesenheit eintragen“.</span>
+    </div>
+</section>
