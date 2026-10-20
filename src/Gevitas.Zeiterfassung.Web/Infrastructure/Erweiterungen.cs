@@ -1,5 +1,7 @@
 using Gevitas.Zeiterfassung.Web.Data;
+using Gevitas.Zeiterfassung.Web.Options;
 using Gevitas.Zeiterfassung.Web.Services;
+using Microsoft.Extensions.Options;
 
 namespace Gevitas.Zeiterfassung.Web.Infrastructure;
 
@@ -20,6 +22,13 @@ public static class DiensteErweiterungen
         services.AddScoped<AnmeldeService>();
         services.AddScoped<DatenbankInitialisierung>();
         services.AddScoped<MitarbeiterService>();
+
+        services.AddSingleton<IFeiertagsService, FeiertagsService>();
+        services.AddSingleton<Arbeitstagkalender>();
+        services.AddSingleton(sp => new Tagesberechnung(
+            ArbeitszeitRegeln.Aus(sp.GetRequiredService<IOptions<ZeiterfassungOptions>>().Value)));
+        services.AddScoped<KontenService>();
+        services.AddScoped<BuchungsService>();
         return services;
     }
 }

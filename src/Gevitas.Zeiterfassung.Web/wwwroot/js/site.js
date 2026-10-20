@@ -62,6 +62,13 @@
         });
     }
 
+    // Auswahlfelder, die ihr Formular sofort absenden (statt Inline-Handler wegen CSP)
+    document.addEventListener("change", function (e) {
+        if (e.target.matches && e.target.matches("[data-auto-absenden]") && e.target.form) {
+            e.target.form.submit();
+        }
+    });
+
     // Live-Uhr im Terminal
     var uhr = document.querySelector("[data-live-uhr]");
     if (uhr) {

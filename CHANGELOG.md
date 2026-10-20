@@ -4,6 +4,18 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.3.0] – 2026-10-20
+
+### Hinzugefügt
+- Terminal mit Kommen/Gehen, Wechselbuchung (Ändern), Krank untertägig und Wegezeit – immer mit aktueller Uhrzeit
+- Dashboard mit minutenaktuellen Konten (Saldo, Arbeitszeit, Soll, Wegezeit, Sonderarbeitszeit)
+- Zeitkorrekturen in der Monatsübersicht: Intervalle hinzufügen, korrigieren und löschen mit Bestätigungsdialog und Bemerkung
+- Detailfenster je Tag (Plandetails, bewerteter Dienst, Kontostände), tagesbezogene Bemerkungen und Buchungsverlauf (P10/P11/P20)
+- Tagesberechnung: Rahmenarbeitszeit, gesetzlicher Pausenabzug, Kappung nach 10 Stunden, Wegezeit-Aufteilung, Krank untertägig
+- Feiertagsberechnung (Osterformel) – Feiertage konfigurierbar, Standard Baden-Württemberg
+- Regeln: keine Buchungen in der Zukunft, maximal 9 Tage rückwirkend (Personalabteilung ohne Grenze), keine Überschneidungen
+- Unit-Tests für Tagesberechnung (inkl. Beispiele aus dem Benutzerhandbuch), Feiertage, Buchungen und Konten
+
 ## [0.2.0] – 2026-10-20
 
 ### Hinzugefügt

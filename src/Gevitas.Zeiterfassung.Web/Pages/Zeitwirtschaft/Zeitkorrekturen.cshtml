@@ -1,0 +1,279 @@
+@page
+@model Gevitas.Zeiterfassung.Web.Pages.Zeitwirtschaft.ZeitkorrekturenModel
+@{
+    ViewData["Title"] = "Zeitkorrekturen";
+    var seite = "/Zeitwirtschaft/Zeitkorrekturen";
+    var vormonat = Model.MonatsBeginn.AddMonths(-1);
+    var folgemonat = Model.MonatsBeginn.AddMonths(1);
+    var auswahl = Model.Auswahl;
+    var arten = new[] { BuchungsArt.Arbeit, BuchungsArt.Wegezeit, BuchungsArt.KrankUntertaegig };
+}
+
+<div class="filterleiste">
+    <div class="monatsnavigation">
+        <a class="knopf knopf-sekundaer knopf-icon" href="@Url.Page(seite, Model.RouteFuer(vormonat))" aria-label="Vormonat">‹</a>
+        <strong>@Zeitformat.Monatsname(Model.MonatsBeginn.Month) @Model.MonatsBeginn.Year</strong>
+        <a class="knopf knopf-sekundaer knopf-icon" href="@Url.Page(seite, Model.RouteFuer(folgemonat))" aria-label="Folgemonat">›</a>
+    </div>
+    @if (Model.Personen.Count > 0)
+    {
+        <form method="get" class="knopfleiste">
+            <input type="hidden" name="monat" value="@Model.MonatText" />
+            <label class="feld">
+                <span>Mitarbeiter/in</span>
+                <select name="ma" data-auto-absenden>
+                    @foreach (var p in Model.Personen)
+                    {
+                        <option value="@p.Id" selected="@(p.Id == Model.Person.Id)">@p.AnzeigeName (@p.Personalnummer)</option>
+                    }
+                </select>
+            </label>
+            <noscript><button class="knopf knopf-klein" type="submit">Anzeigen</button></noscript>
+        </form>
+    }
+    <span class="plakette">@Model.Person.AnzeigeName</span>
+</div>
+
+<div class="korrektur-layout">
+    <section class="karte">
+        <div class="tabellen-rahmen">
+            <table class="tabelle">
+                <thead>
+                    <tr>
+                        <th>Datum</th>
+                        <th>Beginn</th>
+                        <th>Ende</th>
+                        <th>Eigenschaft</th>
+                        <th>Hinweise</th>
+                        <th class="zahl">Soll</th>
+                        <th class="zahl">Ist</th>
+                        <th class="zahl">Saldo</th>
+                        <th class="aktionen">Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var tag in Model.Tage)
+                    {
+                        var bearbeitbar = Model.IstBearbeitbar(tag.Datum);
+                        var zeilen = tag.Buchungen.Count;
+                        var neueZeile = bearbeitbar && Model.Neu && Model.Tag == tag.Datum;
+                        var zeilenKlasse = (tag.Datum == Model.Tag ? "ausgewaehlt " : "") + (tag.IstHeute ? "heute " : "") + (!tag.IstArbeitstag ? "frei" : "");
+                        var tagesLink = Url.Page(seite, Model.RouteFuer(Model.MonatsBeginn, tag.Datum));
+                        var datumWert = tag.Datum.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+
+                        var zeilenAnzahl = Math.Max(1, zeilen + (neueZeile ? 1 : 0));
+
+                        for (var i = 0; i < zeilenAnzahl; i++)
+                        {
+                            var buchung = i < zeilen ? tag.Buchungen[i] : null;
+                            var istNeu = neueZeile && i == zeilen;
+                            var formId = buchung is not null ? $"b-{buchung.Id}" : $"n-{datumWert}";
+                            <tr class="@zeilenKlasse @(i == 0 ? "tag-kopf" : "")">
+                                <td>
+                                    @if (i == 0)
+                                    {
+                                        <a href="@tagesLink"><strong>@Zeitformat.DatumMitWochentag(tag.Datum)</strong></a>
+                                        @if (tag.Feiertag is not null)
+                                        {
+                                            <span class="feiertag-name">@tag.Feiertag</span>
+                                        }
+                                    }
+                                </td>
+
+                                @if (buchung is not null && bearbeitbar)
+                                {
+                                    <td><input type="time" name="eingabe.Beginn" value="@Zeitformat.Uhrzeit(buchung.Beginn)" form="@formId" required /></td>
+                                    <td><input type="time" name="eingabe.Ende" value="@Zeitformat.Uhrzeit(buchung.Ende)" form="@formId" /></td>
+                                    <td>
+                                        <select name="eingabe.Art" form="@formId">
+                                            @foreach (var art in arten)
+                                            {
+                                                <option value="@art" selected="@(buchung.Art == art)">@(art == BuchungsArt.Arbeit ? "…" : art.Text())</option>
+                                            }
+                                        </select>
+                                    </td>
+                                }
+                                else if (buchung is not null)
+                                {
+                                    <td>@Zeitformat.Uhrzeit(buchung.Beginn)</td>
+                                    <td>@Zeitformat.Uhrzeit(buchung.Ende)</td>
+                                    <td>@(buchung.Art == BuchungsArt.Arbeit ? "…" : buchung.Art.Text())</td>
+                                }
+                                else if (istNeu)
+                                {
+                                    <td><input type="time" name="eingabe.Beginn" form="@formId" required autofocus /></td>
+                                    <td><input type="time" name="eingabe.Ende" form="@formId" /></td>
+                                    <td>
+                                        <select name="eingabe.Art" form="@formId">
+                                            @foreach (var art in arten)
+                                            {
+                                                <option value="@art">@(art == BuchungsArt.Arbeit ? "…" : art.Text())</option>
+                                            }
+                                        </select>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td>…</td>
+                                    <td>…</td>
+                                    <td>…</td>
+                                }
+
+                                <td>
+                                    @if (i == 0)
+                                    {
+                                        if (tag.Ergebnis.Abwesenheit is { } abw)
+                                        {
+                                            var abwText = abw.Genehmigt ? $"{abw.Code} – {abw.Name}" : $"{abw.Code} – {abw.Name} (beantragt)";
+                                            <span class="plakette" style="background:@abw.Farbe">@abwText</span>
+                                        }
+                                        foreach (var h in tag.Ergebnis.Hinweise)
+                                        {
+                                            <div class="feld-fehler"><svg class="icon"><use href="#i-warnung" /></svg> @h.Text</div>
+                                        }
+                                    }
+                                </td>
+                                <td class="zahl">@(i == 0 ? Zeitformat.Dauer(tag.Ergebnis.SollMinuten) : "")</td>
+                                <td class="zahl">@(i == 0 && !tag.IstZukunft ? Zeitformat.Dauer(tag.Ergebnis.ArbeitszeitMinuten) : "")</td>
+                                <td class="zahl @(tag.SaldoKontostand < 0 ? "negativ" : "")">@(i == 0 && !tag.IstZukunft ? Zeitformat.Dauer(tag.SaldoKontostand) : "")</td>
+                                <td class="aktionen">
+                                    @if ((buchung is not null && bearbeitbar) || istNeu)
+                                    {
+                                        <form id="@formId" method="post" asp-page-handler="Speichern" data-bestaetigen="Zeitkorrektur für @Zeitformat.DatumMitWochentag(tag.Datum) übernehmen?" data-bestaetigen-titel="Zeitkorrektur bestätigen">
+                                            <input type="hidden" name="eingabe.Id" value="@buchung?.Id" />
+                                            <input type="hidden" name="eingabe.Datum" value="@datumWert" />
+                                            <input type="hidden" name="eingabe.Bemerkung" data-bemerkung-ziel />
+                                            <input type="hidden" name="Ma" value="@Model.Ma" />
+                                            <button type="submit" class="knopf knopf-klein" title="Speichern">Speichern</button>
+                                        </form>
+                                    }
+                                    @if (buchung is not null && bearbeitbar)
+                                    {
+                                        <form method="post" asp-page-handler="Loeschen" data-bestaetigen="Buchung @Zeitformat.Uhrzeit(buchung.Beginn)–@Zeitformat.Uhrzeit(buchung.Ende) am @Zeitformat.Datum(tag.Datum) löschen?" data-bestaetigen-titel="Löschung bestätigen">
+                                            <input type="hidden" name="buchungId" value="@buchung.Id" />
+                                            <input type="hidden" name="datum" value="@datumWert" />
+                                            <input type="hidden" name="Bemerkung" />
+                                            <input type="hidden" name="Ma" value="@Model.Ma" />
+                                            <button type="submit" class="knopf knopf-gefahr knopf-klein knopf-icon" title="Intervall löschen" aria-label="Intervall löschen"><svg class="icon"><use href="#i-loeschen" /></svg></button>
+                                        </form>
+                                    }
+                                    @if (i == 0)
+                                    {
+                                        <a class="knopf knopf-sekundaer knopf-klein knopf-icon" href="@tagesLink" title="Details, Verlauf und Bemerkungen" aria-label="Details"><svg class="icon"><use href="#i-details" /></svg></a>
+                                        @if (bearbeitbar && !neueZeile)
+                                        {
+                                            <a class="knopf knopf-erfolg knopf-klein knopf-icon" href="@Url.Page(seite, Model.RouteFuer(Model.MonatsBeginn, tag.Datum, neu: true))" title="Intervall hinzufügen" aria-label="Intervall hinzufügen"><svg class="icon"><use href="#i-plus" /></svg></a>
+                                        }
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="feld-hilfe">Zeiten können maximal @Model.Optionen.MaxRueckwirkendeTage Tage rückwirkend erfasst werden. Buchungen in der Zukunft sind nicht möglich. „…“ steht für normale Arbeitszeit.</p>
+    </section>
+
+    <aside class="karte detailbereich" aria-label="Detailfenster">
+        @if (auswahl is not null)
+        {
+            var e = auswahl.Ergebnis;
+            <h2><svg class="icon"><use href="#i-kalender" /></svg>@Zeitformat.DatumMitWochentag(auswahl.Datum)</h2>
+
+            <div class="detail-abschnitt">
+                <h3>Plandetails</h3>
+                <ul class="detail-liste">
+                    <li><span>Geplanter Dienst</span><strong>@(e.SollMinuten > 0 ? $"{Zeitformat.Dauer(e.SollMinuten)} Gleitzeit" : auswahl.Feiertag ?? "Frei")</strong></li>
+                    <li><span>Rahmenarbeitszeit</span><strong>@Model.Optionen.Rahmenarbeitszeit.Beginn – @Model.Optionen.Rahmenarbeitszeit.Ende</strong></li>
+                </ul>
+            </div>
+
+            <div class="detail-abschnitt">
+                <h3>Bewerteter Dienst</h3>
+                @if (auswahl.IstZukunft)
+                {
+                    <p class="leer">Noch nicht bewertet.</p>
+                }
+                else
+                {
+                    <ul class="detail-liste">
+                        <li><span>Anwesenheit</span><strong>@Zeitformat.Dauer(e.AnwesenheitMinuten)</strong></li>
+                        <li><span>Anerkannte Pausen</span><strong>@Zeitformat.Dauer(e.PausenMinuten)</strong></li>
+                        <li><span>Pausenabzug</span><strong>@Zeitformat.Dauer(e.PausenabzugMinuten)</strong></li>
+                        @if (e.GekappteMinuten > 0)
+                        {
+                            <li><span>Gekappt (&gt; 10 Std.)</span><strong>@Zeitformat.Dauer(e.GekappteMinuten)</strong></li>
+                        }
+                        @if (e.VorRahmenMinuten + e.NachRahmenMinuten > 0)
+                        {
+                            <li><span>Außerhalb Rahmen</span><strong>@Zeitformat.Dauer(e.VorRahmenMinuten + e.NachRahmenMinuten)</strong></li>
+                        }
+                        <li><span>Normalarbeitszeit</span><strong>@Zeitformat.Dauer(e.NettoArbeitMinuten)</strong></li>
+                        <li><span>Wegezeit gesamt</span><strong>@Zeitformat.Dauer(e.WegezeitMinuten)</strong></li>
+                        <li><span>davon auf Arbeitszeit</span><strong>@Zeitformat.Dauer(e.WegezeitAufArbeitszeit)</strong></li>
+                        @if (e.KrankGutschrift > 0)
+                        {
+                            <li><span>Krank untertägig</span><strong>@Zeitformat.Dauer(e.KrankGutschrift)</strong></li>
+                        }
+                        @if (e.Abwesenheit is { Genehmigt: true })
+                        {
+                            <li><span>Gutschrift @e.Abwesenheit.Name</span><strong>@Zeitformat.Dauer(e.AbwesenheitsGutschrift)</strong></li>
+                        }
+                        <li><span>Ist</span><strong>@Zeitformat.Dauer(e.ArbeitszeitMinuten)</strong></li>
+                        <li><span>Tagessaldo</span><strong>@Zeitformat.Dauer(e.SaldoDelta)</strong></li>
+                        <li><span>Gleitzeitsaldo</span><strong>@Zeitformat.Dauer(auswahl.SaldoKontostand)</strong></li>
+                        <li><span>Wegezeitkonto</span><strong>@Zeitformat.Dauer(auswahl.WegezeitKontostand)</strong></li>
+                        <li><span>Sonderarbeitszeitkonto</span><strong>@Zeitformat.Dauer(auswahl.SonderarbeitszeitKontostand)</strong></li>
+                    </ul>
+                    @if (auswahl.IstHeute)
+                    {
+                        <p class="feld-hilfe">Für den laufenden Tag werden die Zeiten bis zur aktuellen Uhrzeit gewertet.</p>
+                    }
+                }
+            </div>
+
+            <div class="detail-abschnitt">
+                <h3><svg class="icon"><use href="#i-notiz" /></svg> Tagesbezogene Bemerkung</h3>
+                <form method="post" asp-page-handler="Bemerkung" class="formular">
+                    <input type="hidden" name="datum" value="@auswahl.Datum.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture)" />
+                    <input type="hidden" name="Ma" value="@Model.Ma" />
+                    <textarea class="eingabe" name="text" rows="3" placeholder="z. B. Dienstreise, Schulung …">@auswahl.Bemerkung</textarea>
+                    <button type="submit" class="knopf knopf-klein">Speichern</button>
+                </form>
+            </div>
+
+            <div class="detail-abschnitt">
+                <h3><svg class="icon"><use href="#i-verlauf" /></svg> Buchungsverlauf</h3>
+                @if (Model.Verlauf.Count == 0)
+                {
+                    <p class="leer">Keine Änderungen protokolliert.</p>
+                }
+                else
+                {
+                    <div class="tabellen-rahmen">
+                        <table class="tabelle verlauf-tabelle">
+                            <thead><tr><th>Details</th><th>Wann / Wer</th></tr></thead>
+                            <tbody>
+                                @foreach (var p in Model.Verlauf)
+                                {
+                                    <tr>
+                                        <td>
+                                            @p.Details
+                                            @if (!string.IsNullOrEmpty(p.Bemerkung))
+                                            {
+                                                <br /><em>@p.Bemerkung</em>
+                                            }
+                                        </td>
+                                        <td>@Zeitformat.Zeitpunkt(p.Zeitpunkt)<br />@p.AusgefuehrtVonName</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="feld-hilfe">P10 = Kommen, P11 = Wechselbuchung, P20 = Gehen</p>
+                }
+            </div>
+        }
+    </aside>
+</div>

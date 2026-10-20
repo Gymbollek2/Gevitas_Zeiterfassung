@@ -1,8 +1,46 @@
 @page
+@model IndexModel
 @{
     ViewData["Title"] = "Dashboard";
+    var s = Model.Stand;
 }
-<section class="karte">
-    <h2>Willkommen</h2>
-    <p>Die Gevitas Zeiterfassung befindet sich im Aufbau.</p>
-</section>
+<div class="raster raster-2">
+    <section class="karte">
+        <div class="karte-kopf">
+            <h2><svg class="icon"><use href="#i-terminal" /></svg>Terminal</h2>
+            <partial name="_TerminalStatus" model="s" />
+        </div>
+        <div class="terminal">
+            <form method="post" asp-page="/Terminal" class="terminal-form">
+                <input type="hidden" name="aktion" value="@TerminalAktion.KommenOderGehen" />
+                <input type="hidden" name="zurueck" value="dashboard" />
+                <button type="submit" class="terminal-knopf primaer"><svg class="icon"><use href="#i-terminal" /></svg>Kommen oder Gehen</button>
+            </form>
+            <form method="post" asp-page="/Terminal" class="terminal-form">
+                <input type="hidden" name="aktion" value="@TerminalAktion.KrankUntertaegig" />
+                <input type="hidden" name="zurueck" value="dashboard" />
+                <button type="submit" class="terminal-knopf"><svg class="icon"><use href="#i-warnung" /></svg>Krank untertägig</button>
+            </form>
+            <form method="post" asp-page="/Terminal" class="terminal-form">
+                <input type="hidden" name="aktion" value="@TerminalAktion.WegezeitKommenOderGehen" />
+                <input type="hidden" name="zurueck" value="dashboard" />
+                <button type="submit" class="terminal-knopf"><svg class="icon"><use href="#i-kalender" /></svg>Wegezeit (Kommen oder Gehen)</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="karte">
+        <div class="karte-kopf">
+            <h2><svg class="icon"><use href="#i-info" /></svg>Information</h2>
+            <a class="knopf knopf-sekundaer knopf-klein" href="/">Aktualisieren</a>
+        </div>
+        <div class="kennzahlen">
+            <div class="kennzahl @(s.Saldo < 0 ? "negativ" : "")"><span class="kennzahl-label">Saldo</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.Saldo) <span class="kennzahl-einheit">Std.</span></span></div>
+            <div class="kennzahl"><span class="kennzahl-label">Arbeitszeit heute</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.HeuteArbeitszeit) <span class="kennzahl-einheit">Std.</span></span></div>
+            <div class="kennzahl"><span class="kennzahl-label">Sollstunden heute</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.HeuteSoll) <span class="kennzahl-einheit">Std.</span></span></div>
+            <div class="kennzahl"><span class="kennzahl-label">Wegezeit (Kontostand)</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.Wegezeit) <span class="kennzahl-einheit">Std.</span></span></div>
+            <div class="kennzahl"><span class="kennzahl-label">Sonderarbeitszeit</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.Sonderarbeitszeit) <span class="kennzahl-einheit">Std.</span></span></div>
+        </div>
+        <p class="feld-hilfe">Der Saldo ist minutenaktuell: Stand Vortag zuzüglich der heutigen Arbeitszeit abzüglich der heutigen Sollzeit.</p>
+    </section>
+</div>
