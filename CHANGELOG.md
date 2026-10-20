@@ -4,6 +4,20 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.1.0] – 2026-10-20
+
+### Hinzugefügt
+- **Darkmode**: Hell, Dunkel oder „Wie System“ – umschaltbar über das Mond-/Sonnensymbol in der Kopfzeile oder unter Einstellungen; alle Seiten, Tabellen und Kalender angepasst
+- **Englische Oberfläche**: Sprache Deutsch/Englisch unter Einstellungen bzw. bereits auf der Anmeldeseite wählbar; Navigation, Seiten, Meldungen, Regelhinweise, Berichte, Abwesenheitsarten, Feiertage sowie Datums- und Monatsangaben werden übersetzt
+- Darstellung und Sprache werden pro Benutzer gespeichert und nach der Anmeldung automatisch übernommen
+- Anmeldung wahlweise mit Benutzername oder Personalnummer
+- Automatische Ergänzung neuer Spalten in bestehenden Datenbanken (kein manueller Eingriff beim Update nötig)
+- Tests: Vollständigkeit der Übersetzungen, Platzhalter-Prüfung, Sprachumschaltung, Darkmode, Personalnummer-Login, Datenbank-Update
+
+### Geändert
+- Anmeldeformular ist nun mittig ausgerichtet
+- „Abmelden“ erscheint als weiß umrandeter Knopf mit weißer Schrift am Ende der Navigation
+
 ## [1.0.0] – 2026-10-20
 
 Erste vollständige Version.

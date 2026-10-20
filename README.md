@@ -17,11 +17,12 @@ Die Anwendung läuft lokal unter **https://localhost:5016** oder als **Docker-Co
 5. [Lokal starten (https://localhost:5016)](#lokal-starten-httpslocalhost5016)
 6. [Mit Docker starten](#mit-docker-starten)
 7. [Erste Anmeldung & Benutzer](#erste-anmeldung--benutzer)
-8. [Konfiguration (appsettings.json)](#konfiguration-appsettingsjson)
-9. [Tests](#tests)
-10. [Versionierung](#versionierung)
-11. [Projektstruktur](#projektstruktur)
-12. [Fehlerbehebung](#fehlerbehebung)
+8. [Darkmode & Sprache](#darkmode--sprache)
+9. [Konfiguration (appsettings.json)](#konfiguration-appsettingsjson)
+10. [Tests](#tests)
+11. [Versionierung](#versionierung)
+12. [Projektstruktur](#projektstruktur)
+13. [Fehlerbehebung](#fehlerbehebung)
 
 ---
 
@@ -41,6 +42,7 @@ Die Anwendung läuft lokal unter **https://localhost:5016** oder als **Docker-Co
 | **Regelverletzungen** | Fehlende Buchungen, > 10 Std., Rahmen, Saldo-Grenzen, Ruhezeit (11 Std.) – Quittierung durch Mitarbeitende |
 | **Berichte** | 500 Monatsjournal, 539 Saldo-Ampel, 540 Pausenabzug, 542 Urlaubsübersicht, 544 Arbeitszeit > 10, 546 Ruhezeitverletzungen – Druck/PDF und CSV-Export |
 | **Verwaltung** | Mitarbeitende, Rollen, Führungskraft, abweichender Genehmiger, Sollzeit, Urlaubsanspruch, Passwort-Reset |
+| **Darstellung & Sprache** | Darkmode (Hell/Dunkel/Wie System, Umschalter in der Kopfzeile), Oberfläche auf Deutsch oder Englisch – pro Benutzer gespeichert, auf der Anmeldeseite wählbar |
 | **Sicherheit** | Cookie-Anmeldung, PBKDF2-Passwort-Hashes, Rollen, Passwortänderung bei Erstanmeldung, Anti-Forgery, CSP und weitere Sicherheits-Header, HTTPS/HSTS |
 
 ---
@@ -191,11 +193,13 @@ docker compose cp zeiterfassung:/app/App_Data/zeiterfassung.db ./backup-zeiterfa
 
 | Benutzer | Passwort | Rolle | Hinweis |
 |---|---|---|---|
-| `admin` | `Gevitas#Start2026` | Administrator | Wird beim ersten Start angelegt, **Passwort muss bei der ersten Anmeldung geändert werden** |
-| `fuehrung` | `Demo1234!` | Führungskraft | nur in Development |
-| `mitarbeiter` | `Demo1234!` | Mitarbeiter (unterstellt `fuehrung`) | nur in Development |
-| `kollegin` | `Demo1234!` | Mitarbeiterin (unterstellt `fuehrung`) | nur in Development |
-| `personal` | `Demo1234!` | Personalabteilung | nur in Development |
+| `admin` (Pers.-Nr. `0001`) | `Gevitas#Start2026` | Administrator | Wird beim ersten Start angelegt, **Passwort muss bei der ersten Anmeldung geändert werden** |
+| `fuehrung` (`1001`) | `Demo1234!` | Führungskraft | nur in Development |
+| `mitarbeiter` (`1003`) | `Demo1234!` | Mitarbeiter (unterstellt `fuehrung`) | nur in Development |
+| `kollegin` (`1004`) | `Demo1234!` | Mitarbeiterin (unterstellt `fuehrung`) | nur in Development |
+| `personal` (`1002`) | `Demo1234!` | Personalabteilung | nur in Development |
+
+Angemeldet wird wahlweise mit **Benutzername oder Personalnummer**.
 
 Das Start-Passwort des Administrators sollte für den produktiven Betrieb über eine Umgebungsvariable gesetzt werden,
 z. B. in der `docker-compose.yml`: `Seed__AdminPasswort: "EinSicheresPasswort1"`.
@@ -204,6 +208,15 @@ z. B. in der `docker-compose.yml`: `Seed__AdminPasswort: "EinSicheresPasswort1"`
 (Verwaltung, Kontokorrekturen, Zeitkorrekturen ohne 9-Tage-Grenze, alle Berichte) → Administrator.
 
 ---
+
+## Darkmode & Sprache
+
+* **Darkmode:** Über das Mond-/Sonnensymbol oben rechts oder unter **Einstellungen → Darstellung** (Hell, Dunkel, Wie System).
+* **Sprache:** Unter **Einstellungen → Sprache** (Deutsch/English) oder vor der Anmeldung über „Deutsch | English“ unter dem Anmeldeformular.
+* Beide Einstellungen werden pro Benutzer in der Datenbank gespeichert und nach jeder Anmeldung übernommen.
+* Übersetzungen stehen in `Services/Uebersetzungen.cs` (Schlüssel = deutscher Text). Neue Texte im Code mit `T("…")` bzw.
+  `F("…", wert)` kennzeichnen – ein Test schlägt fehl, solange eine englische Übersetzung fehlt.
+* Gespeicherte Inhalte (z. B. Bemerkungen, Buchungsverlauf, Texte von Benachrichtigungen) bleiben in der Sprache, in der sie erfasst wurden.
 
 ## Konfiguration (appsettings.json)
 
@@ -277,6 +290,7 @@ Das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/). Die aktuel
 | 0.4.0 | Anträge, Genehmigung, Kalender, Urlaub, Umbuchungen |
 | 0.5.0 | Regelverletzungen, Berichte, Gruppenkalender |
 | 1.0.0 | Dashboard-Einstellungen, Integrationstests, CI, Dokumentation |
+| 1.1.0 | Darkmode, Englisch, Login per Personalnummer, zentrierte Anmeldung |
 
 Jede Version liegt als Branch `release/vX.Y.Z` vor. Daraus werden die Git-Tags erzeugt mit:
 
@@ -308,8 +322,9 @@ Gevitas_Zeiterfassung/
 └── CHANGELOG.md
 ```
 
-**Datenbank:** Das Schema wird beim Start automatisch angelegt (`EnsureCreated`). Bei späteren Schemaänderungen
-empfiehlt sich die Umstellung auf EF-Core-Migrationen (`dotnet ef migrations add Initial`).
+**Datenbank:** Das Schema wird beim Start automatisch angelegt (`EnsureCreated`); in späteren Versionen hinzugekommene
+Spalten werden bei bestehenden Datenbanken automatisch ergänzt (`DatenbankInitialisierung.SchemaAktualisierenAsync`).
+Ein Update erfordert also keinen manuellen Eingriff – die Daten bleiben erhalten.
 
 ---
 
