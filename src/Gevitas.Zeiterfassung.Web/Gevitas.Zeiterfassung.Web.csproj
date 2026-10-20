@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>Gevitas.Zeiterfassung.Web</RootNamespace>
+    <AssemblyName>Gevitas.Zeiterfassung.Web</AssemblyName>
+    <UserSecretsId>gevitas-zeiterfassung-3f6c1b2e</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Gevitas.Zeiterfassung.Tests" />
+  </ItemGroup>
+
+</Project>

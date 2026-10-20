@@ -1,0 +1,89 @@
+@using Microsoft.Extensions.Options
+@inject IOptions<ZeiterfassungOptions> Einstellungen
+@{
+    var app = Einstellungen.Value;
+    var titel = ViewData["Title"] as string;
+    var meldung = TempData["Meldung"] as string;
+    var fehler = TempData["Fehler"] as string;
+    var angemeldet = User.Identity?.IsAuthenticated == true;
+}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b4f9c" />
+    <title>@(string.IsNullOrEmpty(titel) ? app.Anwendungsname : $"{titel} – {app.Anwendungsname}")</title>
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="@(angemeldet ? "mit-navigation" : "ohne-navigation")">
+    <partial name="_Icons" />
+
+    @if (angemeldet)
+    {
+        <aside class="seitenleiste" id="seitenleiste" aria-label="Hauptnavigation">
+            <a class="marke" asp-page="/Index">
+                <span class="marke-logo" aria-hidden="true">G</span>
+                <span class="marke-text"><strong>@app.Firmenname</strong><small>Zeiterfassung</small></span>
+            </a>
+            <partial name="_Navigation" />
+        </aside>
+        <div class="abdunkler" data-nav-schliessen></div>
+    }
+
+    <div class="hauptbereich">
+        <header class="kopfzeile">
+            @if (angemeldet)
+            {
+                <button type="button" class="nav-umschalter" data-nav-umschalten aria-controls="seitenleiste" aria-label="Menü öffnen">
+                    <svg class="icon"><use href="#i-menu" /></svg>
+                </button>
+            }
+            <h1 class="seitentitel">@(titel ?? app.Anwendungsname)</h1>
+            @if (angemeldet)
+            {
+                <span class="benutzer-chip" title="Angemeldet">
+                    <svg class="icon"><use href="#i-person" /></svg>
+                    <span>@User.Identity!.Name</span>
+                </span>
+            }
+        </header>
+
+        <main class="inhalt" id="inhalt">
+            @if (!string.IsNullOrEmpty(meldung))
+            {
+                <div class="hinweis hinweis-erfolg" role="status">@meldung</div>
+            }
+            @if (!string.IsNullOrEmpty(fehler))
+            {
+                <div class="hinweis hinweis-fehler" role="alert">@fehler</div>
+            }
+            @RenderBody()
+        </main>
+
+        <footer class="fusszeile">
+            <span>© @DateTime.Now.Year @app.Firmenname</span>
+            <span>@app.Anwendungsname · Version @(typeof(Program).Assembly.GetName().Version?.ToString(3))</span>
+        </footer>
+    </div>
+
+    <dialog id="bestaetigungsdialog" class="dialog">
+        <form method="dialog" class="dialog-inhalt">
+            <h2 class="dialog-titel" data-dialog-titel>Änderung bestätigen</h2>
+            <p class="dialog-text" data-dialog-text></p>
+            <label class="feld" data-dialog-bemerkung-feld>
+                <span>Bemerkung (optional)</span>
+                <textarea rows="3" data-dialog-bemerkung></textarea>
+            </label>
+            <div class="dialog-aktionen">
+                <button type="button" class="knopf knopf-sekundaer" value="abbrechen" data-dialog-abbrechen>Abbrechen</button>
+                <button type="button" class="knopf" value="ok" data-dialog-ok>Übernehmen</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

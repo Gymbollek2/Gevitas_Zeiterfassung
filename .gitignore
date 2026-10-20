@@ -1,0 +1,33 @@
+# Build-Ausgaben
+bin/
+obj/
+out/
+publish/
+TestResults/
+*.trx
+coverage*.xml
+
+# IDEs
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+
+# Laufzeitdaten (SQLite-Datenbank, Data-Protection-Schlüssel)
+App_Data/
+*.db
+*.db-shm
+*.db-wal
+
+# Zertifikate und Geheimnisse – niemals einchecken!
+certs/
+*.pfx
+*.pem
+*.key
+.env
+
+# Betriebssystem
+.DS_Store
+Thumbs.db

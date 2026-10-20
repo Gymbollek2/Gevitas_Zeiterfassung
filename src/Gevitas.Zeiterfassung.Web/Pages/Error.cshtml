@@ -1,0 +1,14 @@
+@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "Fehler";
+}
+<section class="karte">
+    <h2>Es ist ein Fehler aufgetreten</h2>
+    <p>Die Anfrage konnte nicht verarbeitet werden. Bitte versuchen Sie es erneut.</p>
+    @if (!string.IsNullOrEmpty(Model.RequestId))
+    {
+        <p class="feld-hilfe">Anfrage-ID: <code>@Model.RequestId</code></p>
+    }
+    <a class="knopf" asp-page="/Index">Zum Dashboard</a>
+</section>

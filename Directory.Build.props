@@ -1,0 +1,16 @@
+<Project>
+  <!-- Gemeinsame Einstellungen für alle Projekte der Solution -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <NeutralLanguage>de-DE</NeutralLanguage>
+
+    <!-- Versionierung: Semantic Versioning (MAJOR.MINOR.PATCH), siehe CHANGELOG.md -->
+    <Version>0.1.0</Version>
+    <Company>Gevitas</Company>
+    <Product>Gevitas Zeiterfassung</Product>
+    <Copyright>© Gevitas</Copyright>
+  </PropertyGroup>
+</Project>

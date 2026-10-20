@@ -1,0 +1,36 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5A6E1D2B-3C4F-4A1B-9E8D-1F2A3B4C5D6E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{6B7F2E3C-4D5A-4B2C-8F9E-2A3B4C5D6E7F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gevitas.Zeiterfassung.Web", "src\Gevitas.Zeiterfassung.Web\Gevitas.Zeiterfassung.Web.csproj", "{1C2D3E4F-5A6B-4C7D-8E9F-0A1B2C3D4E5F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gevitas.Zeiterfassung.Tests", "tests\Gevitas.Zeiterfassung.Tests\Gevitas.Zeiterfassung.Tests.csproj", "{2D3E4F5A-6B7C-4D8E-9F0A-1B2C3D4E5F6A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1C2D3E4F-5A6B-4C7D-8E9F-0A1B2C3D4E5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C2D3E4F-5A6B-4C7D-8E9F-0A1B2C3D4E5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C2D3E4F-5A6B-4C7D-8E9F-0A1B2C3D4E5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C2D3E4F-5A6B-4C7D-8E9F-0A1B2C3D4E5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2D3E4F5A-6B7C-4D8E-9F0A-1B2C3D4E5F6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D3E4F5A-6B7C-4D8E-9F0A-1B2C3D4E5F6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D3E4F5A-6B7C-4D8E-9F0A-1B2C3D4E5F6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2D3E4F5A-6B7C-4D8E-9F0A-1B2C3D4E5F6A}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1C2D3E4F-5A6B-4C7D-8E9F-0A1B2C3D4E5F} = {5A6E1D2B-3C4F-4A1B-9E8D-1F2A3B4C5D6E}
+		{2D3E4F5A-6B7C-4D8E-9F0A-1B2C3D4E5F6A} = {6B7F2E3C-4D5A-4B2C-8F9E-2A3B4C5D6E7F}
+	EndGlobalSection
+EndGlobal

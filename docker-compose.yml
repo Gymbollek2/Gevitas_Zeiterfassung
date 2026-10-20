@@ -1,0 +1,23 @@
+services:
+  zeiterfassung:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gevitas-zeiterfassung:latest
+    container_name: gevitas-zeiterfassung
+    restart: unless-stopped
+    ports:
+      - "5016:5016"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      Kestrel__Endpoints__Https__Url: "https://+:5016"
+      Kestrel__Certificates__Default__Path: /https/gevitas-zeiterfassung.pfx
+      Kestrel__Certificates__Default__Password: ${CERT_PASSWORD:?Bitte zuerst scripts/create-dev-cert ausfuehren (erzeugt .env mit CERT_PASSWORD)}
+      # Optional: Admin-Startpasswort überschreiben (wird beim ersten Login geändert)
+      # Seed__AdminPasswort: "MeinSicheresStartPasswort!"
+    volumes:
+      - gevitas-daten:/app/App_Data
+      - ./certs:/https:ro
+
+volumes:
+  gevitas-daten:
