@@ -33,7 +33,7 @@
     }
 
     <div class="hauptbereich">
-        <header class="kopfzeile">
+        <header class="kopfzeile @(angemeldet ? "" : "kopfzeile-anonym")">
             @if (angemeldet)
             {
                 <button type="button" class="nav-umschalter" data-nav-umschalten aria-controls="seitenleiste" aria-label="Menü öffnen">

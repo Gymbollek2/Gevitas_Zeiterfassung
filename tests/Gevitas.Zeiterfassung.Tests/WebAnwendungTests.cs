@@ -101,6 +101,20 @@ public class WebAnwendungTests : IClassFixture<ZeiterfassungFactory>
         Assert.Contains("nicht korrekt", await antwort.Content.ReadAsStringAsync());
     }
 
+    [Theory]
+    [InlineData("mitarbeiter")]
+    [InlineData("1003")]
+    [InlineData(" MITARBEITER ")]
+    public async Task Anmeldung_mit_Benutzername_oder_Personalnummer(string kennung)
+    {
+        var client = Client();
+        var antwort = await AnmeldenAsync(client, kennung, "Demo1234!");
+
+        Assert.Equal(HttpStatusCode.Redirect, antwort.StatusCode);
+        Assert.Equal("/", antwort.Headers.Location!.ToString());
+        Assert.Contains("Mischa Mitarbeiter", await client.GetStringAsync("/MeineDaten"));
+    }
+
     [Fact]
     public async Task Administrator_muss_das_Startpasswort_aendern()
     {

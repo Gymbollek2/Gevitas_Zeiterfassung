@@ -83,8 +83,13 @@ public sealed class AnmeldeService
 
     public async Task<Mitarbeiter?> PruefenAsync(string benutzername, string passwort, CancellationToken ct = default)
     {
-        var name = benutzername.Trim().ToLowerInvariant();
-        var mitarbeiter = await _db.Mitarbeiter.FirstOrDefaultAsync(m => m.Benutzername == name && m.Aktiv, ct);
+        // Anmeldung wahlweise mit Benutzername oder Personalnummer (Benutzername hat Vorrang)
+        var eingabe = benutzername.Trim();
+        var name = eingabe.ToLowerInvariant();
+        var treffer = await _db.Mitarbeiter
+            .Where(m => m.Aktiv && (m.Benutzername == name || m.Personalnummer == eingabe))
+            .ToListAsync(ct);
+        var mitarbeiter = treffer.FirstOrDefault(m => m.Benutzername == name) ?? treffer.FirstOrDefault();
         if (mitarbeiter is null || !_passwoerter.Pruefen(mitarbeiter, passwort))
         {
             return null;

@@ -19,7 +19,7 @@ public class AnmeldenModel : PageModel
     }
 
     [BindProperty]
-    [Required(ErrorMessage = "Bitte den Benutzernamen eingeben.")]
+    [Required(ErrorMessage = "Bitte Benutzername oder Personalnummer eingeben.")]
     [Display(Name = "Benutzername")]
     public string Benutzername { get; set; } = string.Empty;
 
@@ -55,7 +55,7 @@ public class AnmeldenModel : PageModel
         if (mitarbeiter is null)
         {
             _log.LogWarning("Fehlgeschlagene Anmeldung für Benutzer {Benutzer}.", Benutzername);
-            ModelState.AddModelError(string.Empty, "Benutzername oder Passwort ist nicht korrekt.");
+            ModelState.AddModelError(string.Empty, "Benutzername/Personalnummer oder Passwort ist nicht korrekt.");
             Passwort = string.Empty;
             return Page();
         }

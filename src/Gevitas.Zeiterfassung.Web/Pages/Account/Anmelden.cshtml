@@ -10,7 +10,7 @@
         <div class="anmeldung-kopf">
             <span class="marke-logo" aria-hidden="true">G</span>
             <h2>@Einstellungen.Value.Anwendungsname</h2>
-            <p class="feld-hilfe">Bitte melden Sie sich mit Ihren Zugangsdaten an.</p>
+            <p class="feld-hilfe">Bitte melden Sie sich mit Ihrem Benutzernamen oder Ihrer Personalnummer an.</p>
         </div>
 
         <form method="post" class="formular">
@@ -18,7 +18,7 @@
             <input type="hidden" asp-for="ReturnUrl" />
 
             <label class="feld">
-                <span>Benutzername</span>
+                <span>Benutzername oder Personalnummer</span>
                 <input asp-for="Benutzername" autocomplete="username" autofocus />
                 <span asp-validation-for="Benutzername" class="feld-fehler"></span>
             </label>
