@@ -134,7 +134,7 @@ public sealed class AntragsService
             var (start, ende) = ZusammenhaengenderZeitraum(eigene.Where(a => a.ArtCode == art.Code).ToList(), von, bis);
             if (ende.DayNumber - start.DayNumber + 1 > max)
             {
-                return Ergebnis.Fehler(F("„{0}“ ist für maximal {1} zusammenhängende Kalendertage möglich. Längere Arbeitsunfähigkeiten müssen durch eine ärztliche Bescheinigung (eAU) nachgewiesen werden – bitte „Krank mit eAU“ wählen.", T(art.Name), max);
+                return Ergebnis.Fehler(F("„{0}“ ist für maximal {1} zusammenhängende Kalendertage möglich. Längere Arbeitsunfähigkeiten müssen durch eine ärztliche Bescheinigung (eAU) nachgewiesen werden – bitte „Krank mit eAU“ wählen.", T(art.Name), max));
             }
         }
 
@@ -265,7 +265,7 @@ public sealed class AntragsService
         var bis = UrlaubOptions.Datum(heute.Year, _optionen.Urlaub.UebertragAntragBis);
         if (heute < von || heute > bis)
         {
-            return Ergebnis.Fehler(F("Die Übertragung des Resturlaubs kann nur vom {0} bis {1} beantragt werden. Danach bitte eine E-Mail an {2} schreiben.", Zeitformat.Datum(von), Zeitformat.Datum(bis), _optionen.Support.PersonalabteilungEmail);
+            return Ergebnis.Fehler(F("Die Übertragung des Resturlaubs kann nur vom {0} bis {1} beantragt werden. Danach bitte eine E-Mail an {2} schreiben.", Zeitformat.Datum(von), Zeitformat.Datum(bis), _optionen.Support.PersonalabteilungEmail));
         }
 
         var jahresbeginn = new DateOnly(heute.Year, 1, 1);
