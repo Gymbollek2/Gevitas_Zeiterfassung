@@ -90,6 +90,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseSicherheitsHeader();
 app.UseStaticFiles();
+app.UseSprache();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();

@@ -3,43 +3,42 @@
     var offen = User.IstFuehrungskraft() ? await Antraege.OffeneZurGenehmigungAsync(User.MitarbeiterId(), User.Rolle()) : 0;
 }
 <nav class="navigation">
-    <a class="nav-link" href="/"><svg class="icon"><use href="#i-dashboard" /></svg>Dashboard</a>
-    <a class="nav-link" asp-page="/Terminal"><svg class="icon"><use href="#i-terminal" /></svg>Terminal</a>
+    <a class="nav-link" href="/"><svg class="icon"><use href="#i-dashboard" /></svg>@T("Dashboard")</a>
+    <a class="nav-link" asp-page="/Terminal"><svg class="icon"><use href="#i-terminal" /></svg>@T("Terminal")</a>
 
-    <span class="nav-gruppe">Zeitwirtschaft</span>
-    <a class="nav-link" asp-page="/Zeitwirtschaft/Zeitkorrekturen"><svg class="icon"><use href="#i-korrektur" /></svg>Zeitkorrekturen</a>
-    <a class="nav-link" asp-page="/Zeitwirtschaft/Monatskalender"><svg class="icon"><use href="#i-kalender" /></svg>Monatskalender</a>
-    <a class="nav-link" asp-page="/Zeitwirtschaft/Jahreskalender"><svg class="icon"><use href="#i-kalender" /></svg>Jahreskalender</a>
-    <a class="nav-link" asp-page="/Zeitwirtschaft/Regelverletzungen"><svg class="icon"><use href="#i-warnung" /></svg>Regelverletzungen</a>
+    <span class="nav-gruppe">@T("Zeitwirtschaft")</span>
+    <a class="nav-link" asp-page="/Zeitwirtschaft/Zeitkorrekturen"><svg class="icon"><use href="#i-korrektur" /></svg>@T("Zeitkorrekturen")</a>
+    <a class="nav-link" asp-page="/Zeitwirtschaft/Monatskalender"><svg class="icon"><use href="#i-kalender" /></svg>@T("Monatskalender")</a>
+    <a class="nav-link" asp-page="/Zeitwirtschaft/Jahreskalender"><svg class="icon"><use href="#i-kalender" /></svg>@T("Jahreskalender")</a>
+    <a class="nav-link" asp-page="/Zeitwirtschaft/Regelverletzungen"><svg class="icon"><use href="#i-warnung" /></svg>@T("Regelverletzungen")</a>
     @if (User.IstFuehrungskraft())
     {
-        <a class="nav-link" asp-page="/Zeitwirtschaft/Gruppenkalender"><svg class="icon"><use href="#i-team" /></svg>Gruppenkalender</a>
+        <a class="nav-link" asp-page="/Zeitwirtschaft/Gruppenkalender"><svg class="icon"><use href="#i-team" /></svg>@T("Gruppenkalender")</a>
     }
 
-    <span class="nav-gruppe">Anträge</span>
+    <span class="nav-gruppe">@T("Anträge")</span>
     <a class="nav-link" asp-page="/Antraege/Index" asp-route-sicht="@(offen > 0 ? "Genehmiger" : "Antragsteller")">
-        <svg class="icon"><use href="#i-antrag" /></svg>Anträge
+        <svg class="icon"><use href="#i-antrag" /></svg>@T("Anträge")
         @if (offen > 0)
         {
-            <span class="zaehler" title="Offene Anträge zur Genehmigung">@offen</span>
+            <span class="zaehler" title="@T("Offene Anträge zur Genehmigung")">@offen</span>
         }
     </a>
+    <a class="nav-link" asp-page="/Berichte/Index"><svg class="icon"><use href="#i-bericht" /></svg>@T("Berichte")</a>
 
-    <a class="nav-link" asp-page="/Berichte/Index"><svg class="icon"><use href="#i-bericht" /></svg>Berichte</a>
-
-    <span class="nav-gruppe">Persönlich</span>
-    <a class="nav-link" asp-page="/MeineDaten"><svg class="icon"><use href="#i-person" /></svg>Meine Daten</a>
-    <a class="nav-link" asp-page="/Information"><svg class="icon"><use href="#i-info" /></svg>Information</a>
-    <a class="nav-link" asp-page="/Einstellungen"><svg class="icon"><use href="#i-einstellungen" /></svg>Einstellungen</a>
+    <span class="nav-gruppe">@T("Persönlich")</span>
+    <a class="nav-link" asp-page="/MeineDaten"><svg class="icon"><use href="#i-person" /></svg>@T("Meine Daten")</a>
+    <a class="nav-link" asp-page="/Information"><svg class="icon"><use href="#i-info" /></svg>@T("Information")</a>
+    <a class="nav-link" asp-page="/Einstellungen"><svg class="icon"><use href="#i-einstellungen" /></svg>@T("Einstellungen")</a>
 
     @if (User.IstPersonal())
     {
-        <span class="nav-gruppe">Verwaltung</span>
-        <a class="nav-link" asp-page="/Verwaltung/Mitarbeiter"><svg class="icon"><use href="#i-verwaltung" /></svg>Mitarbeitende</a>
-        <a class="nav-link" asp-page="/Verwaltung/Kontokorrekturen"><svg class="icon"><use href="#i-korrektur" /></svg>Kontokorrekturen</a>
+        <span class="nav-gruppe">@T("Verwaltung")</span>
+        <a class="nav-link" asp-page="/Verwaltung/Mitarbeiter"><svg class="icon"><use href="#i-verwaltung" /></svg>@T("Mitarbeitende")</a>
+        <a class="nav-link" asp-page="/Verwaltung/Kontokorrekturen"><svg class="icon"><use href="#i-korrektur" /></svg>@T("Kontokorrekturen")</a>
     }
 
     <form method="post" asp-page="/Account/Abmelden" class="nav-abmelden-form">
-        <button type="submit" class="nav-abmelden"><svg class="icon"><use href="#i-abmelden" /></svg>Abmelden</button>
+        <button type="submit" class="nav-abmelden"><svg class="icon"><use href="#i-abmelden" /></svg>@T("Abmelden")</button>
     </form>
 </nav>

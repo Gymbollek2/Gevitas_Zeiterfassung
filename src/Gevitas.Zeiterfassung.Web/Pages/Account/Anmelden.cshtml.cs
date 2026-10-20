@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Gevitas.Zeiterfassung.Web.Infrastructure;
 using Gevitas.Zeiterfassung.Web.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -64,6 +65,7 @@ public class AnmeldenModel : PageModel
             CookieAuthenticationDefaults.AuthenticationScheme,
             AnmeldeService.IdentitaetErzeugen(mitarbeiter),
             new AuthenticationProperties { IsPersistent = AngemeldetBleiben });
+        Benutzereinstellungen.Uebernehmen(HttpContext, mitarbeiter.Design, mitarbeiter.Sprache);
 
         if (mitarbeiter.PasswortAendernErforderlich)
         {

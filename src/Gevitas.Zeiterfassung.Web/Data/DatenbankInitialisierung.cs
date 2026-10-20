@@ -1,3 +1,4 @@
+using System.Data;
 using Gevitas.Zeiterfassung.Web.Domain;
 using Gevitas.Zeiterfassung.Web.Options;
 using Gevitas.Zeiterfassung.Web.Services;
@@ -59,6 +60,7 @@ public sealed class DatenbankInitialisierung
     public async Task AusfuehrenAsync(CancellationToken ct = default)
     {
         await _db.Database.EnsureCreatedAsync(ct);
+        await SchemaAktualisierenAsync(ct);
         await AbwesenheitsartenAbgleichenAsync(ct);
 
         if (!_seed.Aktiv)
@@ -70,6 +72,47 @@ public sealed class DatenbankInitialisierung
         if (_seed.Demodaten)
         {
             await DemodatenAnlegenAsync(ct);
+        }
+    }
+
+    /// <summary>
+    /// Ergänzt Spalten, die in neueren Versionen hinzugekommen sind, in bestehenden Datenbanken.
+    /// (EnsureCreated legt nur neue Datenbanken vollständig an.)
+    /// </summary>
+    private async Task SchemaAktualisierenAsync(CancellationToken ct)
+    {
+        await SpalteSicherstellenAsync("Mitarbeiter", "Design", "TEXT NULL", ct);   // seit 1.1.0
+        await SpalteSicherstellenAsync("Mitarbeiter", "Sprache", "TEXT NULL", ct);  // seit 1.1.0
+    }
+
+    private async Task SpalteSicherstellenAsync(string tabelle, string spalte, string definition, CancellationToken ct)
+    {
+        // Tabellen- und Spaltennamen sind feste Konstanten aus dem Code – keine Benutzereingaben.
+        var verbindung = _db.Database.GetDbConnection();
+        var selbstGeoeffnet = verbindung.State != ConnectionState.Open;
+        if (selbstGeoeffnet)
+        {
+            await verbindung.OpenAsync(ct);
+        }
+
+        try
+        {
+            await using var befehl = verbindung.CreateCommand();
+            befehl.CommandText = $"SELECT COUNT(*) FROM pragma_table_info('{tabelle}') WHERE name = '{spalte}'";
+            var vorhanden = Convert.ToInt64(await befehl.ExecuteScalarAsync(ct), System.Globalization.CultureInfo.InvariantCulture) > 0;
+            if (!vorhanden)
+            {
+                befehl.CommandText = $"ALTER TABLE \"{tabelle}\" ADD COLUMN \"{spalte}\" {definition}";
+                await befehl.ExecuteNonQueryAsync(ct);
+                _log.LogInformation("Datenbank aktualisiert: Spalte {Tabelle}.{Spalte} ergänzt.", tabelle, spalte);
+            }
+        }
+        finally
+        {
+            if (selbstGeoeffnet)
+            {
+                await verbindung.CloseAsync();
+            }
         }
     }
 

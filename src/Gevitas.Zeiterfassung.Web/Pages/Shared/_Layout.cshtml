@@ -6,13 +6,18 @@
     var meldung = TempData["Meldung"] as string;
     var fehler = TempData["Fehler"] as string;
     var angemeldet = User.Identity?.IsAuthenticated == true;
+    var design = Benutzereinstellungen.Design(Context);
+    var naechstesDesign = design == Benutzereinstellungen.DesignDunkel ? Benutzereinstellungen.DesignHell : Benutzereinstellungen.DesignDunkel;
+    var designText = naechstesDesign == Benutzereinstellungen.DesignDunkel ? T("Darkmode einschalten") : T("Hellen Modus einschalten");
+    var zurueck = Context.Request.Path + Context.Request.QueryString;
 }
 <!DOCTYPE html>
-<html lang="de">
+<html lang="@Texte.Sprache" data-theme="@design">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0b4f9c" />
+    <meta name="color-scheme" content="light dark" />
     <title>@(string.IsNullOrEmpty(titel) ? app.Anwendungsname : $"{titel} – {app.Anwendungsname}")</title>
     <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -22,10 +27,10 @@
 
     @if (angemeldet)
     {
-        <aside class="seitenleiste" id="seitenleiste" aria-label="Hauptnavigation">
+        <aside class="seitenleiste" id="seitenleiste" aria-label="@T("Hauptnavigation")">
             <a class="marke" asp-page="/Index">
                 <span class="marke-logo" aria-hidden="true">G</span>
-                <span class="marke-text"><strong>@app.Firmenname</strong><small>Zeiterfassung</small></span>
+                <span class="marke-text"><strong>@app.Firmenname</strong><small>@T("Zeiterfassung")</small></span>
             </a>
             <partial name="_Navigation" />
         </aside>
@@ -36,17 +41,26 @@
         <header class="kopfzeile @(angemeldet ? "" : "kopfzeile-anonym")">
             @if (angemeldet)
             {
-                <button type="button" class="nav-umschalter" data-nav-umschalten aria-controls="seitenleiste" aria-label="Menü öffnen">
+                <button type="button" class="nav-umschalter" data-nav-umschalten aria-controls="seitenleiste" aria-label="@T("Menü öffnen")">
                     <svg class="icon"><use href="#i-menu" /></svg>
                 </button>
             }
             <h1 class="seitentitel">@(titel ?? app.Anwendungsname)</h1>
             @if (angemeldet)
             {
-                <span class="benutzer-chip" title="Angemeldet">
-                    <svg class="icon"><use href="#i-person" /></svg>
-                    <span>@User.Identity!.Name</span>
-                </span>
+                <div class="kopf-aktionen">
+                    <form method="post" asp-page="/Einstellungen" asp-page-handler="Design">
+                        <input type="hidden" name="wert" value="@naechstesDesign" />
+                        <input type="hidden" name="zurueck" value="@zurueck" />
+                        <button type="submit" class="design-umschalter" title="@designText" aria-label="@designText">
+                            <svg class="icon"><use href="@(naechstesDesign == Benutzereinstellungen.DesignDunkel ? "#i-mond" : "#i-sonne")" /></svg>
+                        </button>
+                    </form>
+                    <span class="benutzer-chip" title="@T("Angemeldet")">
+                        <svg class="icon"><use href="#i-person" /></svg>
+                        <span>@User.Identity!.Name</span>
+                    </span>
+                </div>
             }
         </header>
 
@@ -64,21 +78,21 @@
 
         <footer class="fusszeile">
             <span>© @DateTime.Now.Year @app.Firmenname</span>
-            <span>@app.Anwendungsname · Version @(typeof(Program).Assembly.GetName().Version?.ToString(3))</span>
+            <span>@app.Anwendungsname · @T("Version") @(typeof(Program).Assembly.GetName().Version?.ToString(3))</span>
         </footer>
     </div>
 
     <dialog id="bestaetigungsdialog" class="dialog">
         <form method="dialog" class="dialog-inhalt">
-            <h2 class="dialog-titel" data-dialog-titel>Änderung bestätigen</h2>
+            <h2 class="dialog-titel" data-dialog-titel>@T("Änderung bestätigen")</h2>
             <p class="dialog-text" data-dialog-text></p>
             <label class="feld" data-dialog-bemerkung-feld>
-                <span>Bemerkung (optional)</span>
+                <span>@T("Bemerkung (optional)")</span>
                 <textarea rows="3" data-dialog-bemerkung></textarea>
             </label>
             <div class="dialog-aktionen">
-                <button type="button" class="knopf knopf-sekundaer" value="abbrechen" data-dialog-abbrechen>Abbrechen</button>
-                <button type="button" class="knopf" value="ok" data-dialog-ok>Übernehmen</button>
+                <button type="button" class="knopf knopf-sekundaer" value="abbrechen" data-dialog-abbrechen>@T("Abbrechen")</button>
+                <button type="button" class="knopf" value="ok" data-dialog-ok>@T("Übernehmen")</button>
             </div>
         </form>
     </dialog>

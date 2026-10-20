@@ -34,6 +34,8 @@ public class ZeiterfassungDbContext : DbContext
             e.Property(m => m.Nachname).HasMaxLength(100);
             e.Property(m => m.Email).HasMaxLength(200);
             e.Property(m => m.Abteilung).HasMaxLength(100);
+            e.Property(m => m.Design).HasMaxLength(10);
+            e.Property(m => m.Sprache).HasMaxLength(5);
             e.HasOne(m => m.Vorgesetzter).WithMany().HasForeignKey(m => m.VorgesetzterId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(m => m.AbweichenderGenehmiger).WithMany().HasForeignKey(m => m.AbweichenderGenehmigerId).OnDelete(DeleteBehavior.Restrict);
         });

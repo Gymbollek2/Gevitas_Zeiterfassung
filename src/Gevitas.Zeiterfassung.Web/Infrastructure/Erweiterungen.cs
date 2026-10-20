@@ -57,6 +57,14 @@ public static class PipelineErweiterungen
             await next();
         });
 
+    /// <summary>Setzt die Sprache der Oberfläche für die aktuelle Anfrage (Cookie, Standard Deutsch).</summary>
+    public static IApplicationBuilder UseSprache(this IApplicationBuilder app) =>
+        app.Use(async (context, next) =>
+        {
+            Texte.Sprache = Benutzereinstellungen.Sprache(context);
+            await next();
+        });
+
     /// <summary>
     /// Leitet Benutzer, die ihr Startpasswort noch ändern müssen, auf die Passwortseite um.
     /// </summary>

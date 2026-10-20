@@ -1,22 +1,63 @@
 @page
 @model EinstellungenModel
 @{
-    ViewData["Title"] = "Einstellungen";
+    ViewData["Title"] = T("Einstellungen");
+    var designs = new[]
+    {
+        (Benutzereinstellungen.DesignSystem, T("Wie System"), T("Folgt der Einstellung Ihres Betriebssystems"), "vorschau-system"),
+        (Benutzereinstellungen.DesignHell, T("Hell"), T("Blau/Weiß"), "vorschau-hell"),
+        (Benutzereinstellungen.DesignDunkel, T("Dunkel (Darkmode)"), T("Dunkle Flächen, augenschonend"), "vorschau-dunkel")
+    };
 }
-<section class="karte" style="max-width:720px">
-    <h2><svg class="icon"><use href="#i-einstellungen" /></svg>Dashboard anpassen</h2>
-    <p class="feld-hilfe">Wählen Sie aus, welche Inhalte auf Ihrem Dashboard angezeigt werden. Die Funktion „Krank untertägig“ steht im Dashboard nur zur Verfügung, wenn Sie sie hier hinzufügen – ansonsten tragen Sie sie über die Zeitkorrekturen oder das Terminal ein.</p>
-    <form method="post" class="formular">
-        @foreach (var (schluessel, bezeichnung, beschreibung) in DashboardKacheln.Alle)
-        {
-            <label class="checkbox" style="align-items:flex-start">
-                <input type="checkbox" name="kacheln" value="@schluessel" checked="@Model.Aktiv.Contains(schluessel)" style="margin-top:.3rem" />
-                <span><strong>@bezeichnung</strong><br /><span class="feld-hilfe">@beschreibung</span></span>
+<div class="raster raster-2">
+    <section class="karte">
+        <h2><svg class="icon"><use href="#i-sonne" /></svg>@T("Darstellung & Sprache")</h2>
+        <form method="post" asp-page-handler="Darstellung" class="formular">
+            <fieldset style="border:0;padding:0;margin:0">
+                <legend class="feld-hilfe" style="margin-bottom:.5rem">@T("Darstellung")</legend>
+                <div class="auswahl-karten">
+                    @foreach (var (wert, name, beschreibung, vorschau) in designs)
+                    {
+                        <label class="auswahl-karte">
+                            <input type="radio" name="design" value="@wert" checked="@(Model.Design == wert)" />
+                            <span class="auswahl-vorschau @vorschau" aria-hidden="true"></span>
+                            <strong>@name</strong>
+                            <span class="feld-hilfe">@beschreibung</span>
+                        </label>
+                    }
+                </div>
+            </fieldset>
+
+            <label class="feld">
+                <span><svg class="icon"><use href="#i-sprache" /></svg> @T("Sprache")</span>
+                <select name="sprache">
+                    <option value="@Benutzereinstellungen.Deutsch" selected="@(Model.Sprache == Benutzereinstellungen.Deutsch)">Deutsch</option>
+                    <option value="@Benutzereinstellungen.Englisch" selected="@(Model.Sprache == Benutzereinstellungen.Englisch)">English</option>
+                </select>
             </label>
-        }
-        <div class="knopfleiste">
-            <button type="submit" class="knopf">Speichern</button>
-            <button type="submit" class="knopf knopf-sekundaer" asp-page-handler="Standard">Standard wiederherstellen</button>
-        </div>
-    </form>
-</section>
+
+            <div class="knopfleiste">
+                <button type="submit" class="knopf">@T("Speichern")</button>
+            </div>
+            <p class="feld-hilfe">@T("Den Darkmode können Sie auch jederzeit über das Mond-/Sonnensymbol oben rechts umschalten.")</p>
+        </form>
+    </section>
+
+    <section class="karte">
+        <h2><svg class="icon"><use href="#i-einstellungen" /></svg>@T("Dashboard anpassen")</h2>
+        <p class="feld-hilfe">@T("Wählen Sie aus, welche Inhalte auf Ihrem Dashboard angezeigt werden. Die Funktion „Krank untertägig“ steht im Dashboard nur zur Verfügung, wenn Sie sie hier hinzufügen – ansonsten tragen Sie sie über die Zeitkorrekturen oder das Terminal ein.")</p>
+        <form method="post" class="formular">
+            @foreach (var (schluessel, bezeichnung, beschreibung) in DashboardKacheln.Alle)
+            {
+                <label class="checkbox" style="align-items:flex-start">
+                    <input type="checkbox" name="kacheln" value="@schluessel" checked="@Model.Aktiv.Contains(schluessel)" style="margin-top:.3rem" />
+                    <span><strong>@T(bezeichnung)</strong><br /><span class="feld-hilfe">@T(beschreibung)</span></span>
+                </label>
+            }
+            <div class="knopfleiste">
+                <button type="submit" class="knopf">@T("Speichern")</button>
+                <button type="submit" class="knopf knopf-sekundaer" asp-page-handler="Standard">@T("Standard wiederherstellen")</button>
+            </div>
+        </form>
+    </section>
+</div>

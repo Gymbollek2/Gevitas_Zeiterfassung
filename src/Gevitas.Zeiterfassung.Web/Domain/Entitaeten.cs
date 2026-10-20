@@ -30,6 +30,12 @@ public class Mitarbeiter
     /// <summary>Kommagetrennte Liste der sichtbaren Dashboard-Kacheln (null = Standard).</summary>
     public string? DashboardKacheln { get; set; }
 
+    /// <summary>Darstellung: system, hell oder dunkel (null = system).</summary>
+    public string? Design { get; set; }
+
+    /// <summary>Sprache der Oberfläche: de oder en (null = de).</summary>
+    public string? Sprache { get; set; }
+
     public string AnzeigeName => $"{Nachname}, {Vorname}";
     public string VollerName => $"{Vorname} {Nachname}";
 }

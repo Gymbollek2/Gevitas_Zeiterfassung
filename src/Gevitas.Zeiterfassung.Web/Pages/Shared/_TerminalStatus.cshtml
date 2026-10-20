@@ -1,9 +1,9 @@
 @model Kontostand
 @if (Model.Anwesend)
 {
-    <span class="plakette plakette-gruen">@(Model.OffeneArt == BuchungsArt.Wegezeit ? "Wegezeit läuft" : "Anwesend")</span>
+    <span class="plakette plakette-gruen">@(Model.OffeneArt == BuchungsArt.Wegezeit ? T("Wegezeit läuft") : T("Anwesend"))</span>
 }
 else
 {
-    <span class="plakette plakette-rot">Abwesend</span>
+    <span class="plakette plakette-rot">@T("Abwesend")</span>
 }
