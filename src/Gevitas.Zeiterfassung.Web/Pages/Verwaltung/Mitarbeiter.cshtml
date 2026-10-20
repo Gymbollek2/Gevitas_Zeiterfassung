@@ -45,7 +45,10 @@
                             }
                         </td>
                         <td class="aktionen">
-                            <a class="knopf knopf-sekundaer knopf-klein" asp-page="/Verwaltung/MitarbeiterBearbeiten" asp-route-id="@m.Id">@T("Bearbeiten")</a>
+                            @if (m.Rolle != Rolle.Administrator || User.Rolle() == Rolle.Administrator)
+                            {
+                                <a class="knopf knopf-sekundaer knopf-klein" asp-page="/Verwaltung/MitarbeiterBearbeiten" asp-route-id="@m.Id">@T("Bearbeiten")</a>
+                            }
                         </td>
                     </tr>
                 }

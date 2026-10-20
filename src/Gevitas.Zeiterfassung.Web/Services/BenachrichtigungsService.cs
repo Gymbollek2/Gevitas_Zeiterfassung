@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Mail;
 using Gevitas.Zeiterfassung.Web.Data;
 using Gevitas.Zeiterfassung.Web.Domain;
+using Gevitas.Zeiterfassung.Web.Infrastructure;
 using Gevitas.Zeiterfassung.Web.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -52,9 +53,15 @@ public sealed class SmtpEmailVersand : IEmailVersand
     }
 }
 
-/// <summary>Benachrichtigungen in der Anwendung und – falls konfiguriert – per E-Mail.</summary>
+/// <summary>
+/// Benachrichtigungen in der Anwendung (Glocke oben rechts) und – falls konfiguriert – per E-Mail.
+/// Der Titel wird als deutscher Schlüssel gespeichert und bei der Anzeige übersetzt; der Text wird in der
+/// Sprache der Empfängerin bzw. des Empfängers erzeugt.
+/// </summary>
 public sealed class BenachrichtigungsService
 {
+    public const int AnzahlInDerGlocke = 8;
+
     private readonly ZeiterfassungDbContext _db;
     private readonly IEmailVersand _email;
     private readonly IAppUhr _uhr;
@@ -69,35 +76,103 @@ public sealed class BenachrichtigungsService
     }
 
     /// <summary>Legt eine Benachrichtigung an. Wird mit dem nächsten SaveChanges gespeichert; die E-Mail geht sofort raus.</summary>
-    public async Task BenachrichtigenAsync(int mitarbeiterId, string titel, string text, string? link, CancellationToken ct = default)
+    public Task BenachrichtigenAsync(int mitarbeiterId, string titel, string text, string? link, CancellationToken ct = default) =>
+        BenachrichtigenAsync(mitarbeiterId, titel, () => text, link, ct);
+
+    /// <summary>
+    /// Legt eine Benachrichtigung an. <paramref name="text"/> wird in der Sprache der Empfängerin bzw. des Empfängers
+    /// ausgewertet (T/F innerhalb der Funktion verwenden). Inaktive Personen werden nicht benachrichtigt.
+    /// </summary>
+    public async Task BenachrichtigenAsync(int mitarbeiterId, string titel, Func<string> text, string? link, CancellationToken ct = default)
     {
+        var empfaenger = await _db.Mitarbeiter.AsNoTracking()
+            .Where(m => m.Id == mitarbeiterId)
+            .Select(m => new { m.Email, m.Sprache, m.Aktiv })
+            .FirstOrDefaultAsync(ct);
+        if (empfaenger is null || !empfaenger.Aktiv)
+        {
+            return;
+        }
+
+        string inhalt;
+        string betreff;
+        var bisher = Texte.Sprache;
+        try
+        {
+            Texte.Sprache = Benutzereinstellungen.GueltigeSprache(empfaenger.Sprache) ?? Benutzereinstellungen.Deutsch;
+            inhalt = text();
+            betreff = Texte.T(titel);
+        }
+        finally
+        {
+            Texte.Sprache = bisher;
+        }
+
         _db.Benachrichtigungen.Add(new Benachrichtigung
         {
             MitarbeiterId = mitarbeiterId,
             Titel = titel,
-            Text = text,
+            Text = inhalt.Length > 2000 ? inhalt[..2000] : inhalt,
             Link = link,
             ErstelltAm = _uhr.Jetzt
         });
 
-        var empfaenger = await _db.Mitarbeiter.AsNoTracking().Where(m => m.Id == mitarbeiterId).Select(m => m.Email).FirstOrDefaultAsync(ct);
-        if (!string.IsNullOrWhiteSpace(empfaenger))
+        if (!string.IsNullOrWhiteSpace(empfaenger.Email))
         {
-            await _email.SendenAsync(empfaenger, $"{_optionen.Anwendungsname}: {titel}", text, ct);
+            await _email.SendenAsync(empfaenger.Email, $"{_optionen.Anwendungsname}: {betreff}", inhalt, ct);
         }
     }
+
+    /// <summary>Speichert angelegte Benachrichtigungen, wenn keine weitere fachliche Änderung gespeichert wird.</summary>
+    public Task SpeichernAsync(CancellationToken ct = default) => _db.SaveChangesAsync(ct);
+
+    public Task<int> AnzahlUngelesenAsync(int mitarbeiterId, CancellationToken ct = default) =>
+        _db.Benachrichtigungen.CountAsync(b => b.MitarbeiterId == mitarbeiterId && !b.Gelesen, ct);
 
     public Task<List<Benachrichtigung>> UngeleseneAsync(int mitarbeiterId, CancellationToken ct = default) =>
         _db.Benachrichtigungen.AsNoTracking()
             .Where(b => b.MitarbeiterId == mitarbeiterId && !b.Gelesen)
-            .OrderByDescending(b => b.ErstelltAm)
+            .OrderByDescending(b => b.ErstelltAm).ThenByDescending(b => b.Id)
             .Take(20)
             .ToListAsync(ct);
+
+    /// <summary>Die neuesten Benachrichtigungen (gelesen und ungelesen), z. B. für die Glocke.</summary>
+    public Task<List<Benachrichtigung>> NeuesteAsync(int mitarbeiterId, int anzahl, CancellationToken ct = default) =>
+        _db.Benachrichtigungen.AsNoTracking()
+            .Where(b => b.MitarbeiterId == mitarbeiterId)
+            .OrderByDescending(b => b.ErstelltAm).ThenByDescending(b => b.Id)
+            .Take(anzahl)
+            .ToListAsync(ct);
+
+    /// <summary>
+    /// Markiert eine eigene Benachrichtigung als gelesen und liefert sie zurück (null, wenn sie nicht existiert
+    /// oder einer anderen Person gehört).
+    /// </summary>
+    public async Task<Benachrichtigung?> GelesenAsync(int mitarbeiterId, int benachrichtigungId, CancellationToken ct = default)
+    {
+        var b = await _db.Benachrichtigungen.FirstOrDefaultAsync(x => x.Id == benachrichtigungId && x.MitarbeiterId == mitarbeiterId, ct);
+        if (b is { Gelesen: false })
+        {
+            b.Gelesen = true;
+            await _db.SaveChangesAsync(ct);
+        }
+
+        return b;
+    }
 
     public async Task AlleGelesenAsync(int mitarbeiterId, CancellationToken ct = default)
     {
         await _db.Benachrichtigungen
             .Where(b => b.MitarbeiterId == mitarbeiterId && !b.Gelesen)
             .ExecuteUpdateAsync(s => s.SetProperty(b => b.Gelesen, true), ct);
+    }
+
+    /// <summary>Löscht gelesene Benachrichtigungen, die älter als die konfigurierte Aufbewahrungsdauer sind.</summary>
+    public async Task<int> AufraeumenAsync(CancellationToken ct = default)
+    {
+        var grenze = _uhr.Jetzt.AddDays(-Math.Max(1, _optionen.BenachrichtigungenAufbewahrenTage));
+        return await _db.Benachrichtigungen
+            .Where(b => b.Gelesen && b.ErstelltAm < grenze)
+            .ExecuteDeleteAsync(ct);
     }
 }

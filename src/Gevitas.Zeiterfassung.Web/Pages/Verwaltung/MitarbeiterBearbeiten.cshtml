@@ -18,14 +18,54 @@
             <label class="feld"><span>@T("Abteilung")</span><input asp-for="Eingabe.Abteilung" /></label>
             <label class="feld">
                 <span>@T("Rolle")</span>
-                <select asp-for="Eingabe.Rolle">
-                    @foreach (var rolle in Enum.GetValues<Rolle>())
-                    {
-                        <option value="@rolle" selected="@(Model.Eingabe.Rolle == rolle)">@rolle.Text()</option>
-                    }
-                </select>
+                @if (Model.IstEigenerDatensatz)
+                {
+                    <input type="hidden" name="Eingabe.Rolle" value="@Model.Eingabe.Rolle" />
+                    <select disabled>
+                        <option>@Model.Eingabe.Rolle.Text()</option>
+                    </select>
+                    <span class="feld-hilfe">@T("Die eigene Rolle kann nicht geändert werden.")</span>
+                }
+                else
+                {
+                    <select name="Eingabe.Rolle" id="Eingabe_Rolle">
+                        @foreach (var rolle in Enum.GetValues<Rolle>().Where(r => r != Rolle.Administrator || Model.DarfAdministratorVergeben))
+                        {
+                            <option value="@rolle" selected="@(Model.Eingabe.Rolle == rolle)">@rolle.Text()</option>
+                        }
+                    </select>
+                    <span class="feld-hilfe">@T("Nur Führungskräfte (sowie Personal und Administratoren) können anderen Personen als Führungskraft zugeordnet werden.")</span>
+                }
             </label>
             <label class="feld"><span>@T("Eintrittsdatum")</span><input asp-for="Eingabe.Eintrittsdatum" type="date" /></label>
+        </div>
+
+        <h2>@T("Zeiterfassung")</h2>
+        <div class="formular-raster">
+            @if (Model.IstNeu)
+            {
+                <fieldset class="feld auswahl-gruppe">
+                    <legend>@T("Zeiterfassung ab")</legend>
+                    <label class="checkbox">
+                        <input type="radio" name="Eingabe.ErfassungAbFolgetag" value="true" id="erfassung-folgetag" checked="@Model.Eingabe.ErfassungAbFolgetag" />
+                        @F("Am Folgetag der Accounterstellung ({0})", Zeitformat.Datum(Model.Folgetag))
+                    </label>
+                    <label class="checkbox">
+                        <input type="radio" name="Eingabe.ErfassungAbFolgetag" value="false" id="erfassung-datum" checked="@(!Model.Eingabe.ErfassungAbFolgetag)" />
+                        @T("An einem anderen Tag:")
+                    </label>
+                    <input type="date" name="Eingabe.ErfassungAb" value="@(Model.Eingabe.ErfassungAb?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture))" aria-label="@T("Datum, ab dem die Zeit erfasst wird")" data-waehlt="erfassung-datum" />
+                    <span class="feld-hilfe">@T("Sollzeit und Kontostände werden erst ab diesem Tag berechnet – so startet niemand mit Minusstunden. Liegt das Eintrittsdatum später, gilt das Eintrittsdatum.")</span>
+                </fieldset>
+            }
+            else
+            {
+                <label class="feld">
+                    <span>@T("Zeiterfassung ab")</span>
+                    <input type="date" name="Eingabe.ErfassungAb" value="@(Model.Eingabe.ErfassungAb?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture))" required />
+                    <span class="feld-hilfe">@T("Sollzeit und Kontostände werden ab diesem Tag berechnet. Eine Änderung berechnet alle Konten neu.")</span>
+                </label>
+            }
         </div>
 
         <h2>@T("Arbeitszeit & Genehmigung")</h2>
@@ -41,9 +81,14 @@
                     <option value="">@T("– keine –")</option>
                     @foreach (var m in Model.Auswahl)
                     {
-                        <option value="@m.Id" selected="@(Model.Eingabe.VorgesetzterId == m.Id)">@m.AnzeigeName</option>
+                        <option value="@m.Id" selected="@(Model.Eingabe.VorgesetzterId == m.Id)">@m.AnzeigeName (@m.Rolle.Text())</option>
+                    }
+                    @if (Model.Eingabe.VorgesetzterId is int fk && Model.UngueltigeZuordnungen.TryGetValue(fk, out var fkName))
+                    {
+                        <option value="@fk" selected>@fkName – @T("nicht zulässig, bitte ändern")</option>
                     }
                 </select>
+                <span class="feld-hilfe">@T("Zur Auswahl stehen nur aktive Führungskräfte, Personal und Administratoren.")</span>
             </label>
             <label class="feld">
                 <span>@T("Abweichender Genehmiger (Vertretung)")</span>
@@ -51,7 +96,11 @@
                     <option value="">@T("– keiner –")</option>
                     @foreach (var m in Model.Auswahl)
                     {
-                        <option value="@m.Id" selected="@(Model.Eingabe.AbweichenderGenehmigerId == m.Id)">@m.AnzeigeName</option>
+                        <option value="@m.Id" selected="@(Model.Eingabe.AbweichenderGenehmigerId == m.Id)">@m.AnzeigeName (@m.Rolle.Text())</option>
+                    }
+                    @if (Model.Eingabe.AbweichenderGenehmigerId is int g && Model.UngueltigeZuordnungen.TryGetValue(g, out var gName))
+                    {
+                        <option value="@g" selected>@gName – @T("nicht zulässig, bitte ändern")</option>
                     }
                 </select>
                 <span class="feld-hilfe">@T("Wird statt der Führungskraft als Genehmiger verwendet.")</span>
@@ -65,7 +114,15 @@
                 <input asp-for="Eingabe.NeuesPasswort" type="password" autocomplete="new-password" />
                 <span class="feld-hilfe">@T("Muss bei der nächsten Anmeldung geändert werden.")</span>
             </label>
-            <label class="checkbox"><input asp-for="Eingabe.Aktiv" type="checkbox" /> @T("Zugang aktiv")</label>
+            @if (Model.IstEigenerDatensatz)
+            {
+                <input type="hidden" name="Eingabe.Aktiv" value="true" />
+                <label class="checkbox"><input type="checkbox" checked disabled /> @T("Zugang aktiv") <span class="feld-hilfe">@T("(der eigene Zugang kann nicht deaktiviert werden)")</span></label>
+            }
+            else
+            {
+                <label class="checkbox"><input asp-for="Eingabe.Aktiv" type="checkbox" /> @T("Zugang aktiv")</label>
+            }
         </div>
 
         <div class="knopfleiste">

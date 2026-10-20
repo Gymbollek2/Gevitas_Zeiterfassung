@@ -4,6 +4,25 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.2.0] – 2026-10-20
+
+### Hinzugefügt
+- **Benachrichtigungs-Glocke** oben rechts: Zähler der ungelesenen Benachrichtigungen, Liste mit fett markierten ungelesenen Einträgen, Klick markiert als gelesen und öffnet das Ziel, „Alle als gelesen markieren“, Seite „Alle Benachrichtigungen“
+- Weitere Benachrichtigungen: Bestätigung der Antragstellung, Weiterleitung zweistufiger Anträge, zurückgezogene Anträge, neue Führungskraft bzw. Vertretung, neuer Zugang, Zeit- und Kontokorrekturen durch die Personalabteilung
+- Benachrichtigungen werden in der Sprache der Empfängerin bzw. des Empfängers erstellt; alte gelesene Benachrichtigungen werden nach `BenachrichtigungenAufbewahrenTage` gelöscht
+- **Beginn der Zeiterfassung** beim Anlegen eines Accounts: Standard „Am Folgetag der Accounterstellung“ oder ein anderer Tag; Sollzeit und Konten werden erst ab diesem Tag berechnet (kein Start mit Minusstunden)
+- Offene Anträge werden bei einem Wechsel der Führungskraft/Vertretung automatisch an die neue Genehmigerin bzw. den neuen Genehmiger weitergeleitet
+
+### Geändert
+- Als Führungskraft und abweichender Genehmiger sind nur noch aktive Personen mit der Rolle Führungskraft, Personal oder Administrator wählbar (keine unterstellten Personen)
+- Führungskräfte mit zugeordneten Personen oder offenen Anträgen können nicht herabgestuft oder deaktiviert werden
+- Die eigene Rolle und der eigene Zugang sind geschützt; Administratoren können nur von Administratoren bearbeitet werden
+- Bestehende Datenbanken erhalten die neue Spalte automatisch; der Erfassungsbeginn wird einmalig auf die erste Zeitbuchung gesetzt
+- Umlaute werden im HTML nicht mehr als Entities ausgegeben
+
+### Behoben
+- In Benachrichtigungen zu Abwesenheitsanträgen stand statt der Abwesenheitsart nur das Kürzel (z. B. „U“)
+
 ## [1.1.0] – 2026-10-20
 
 ### Hinzugefügt

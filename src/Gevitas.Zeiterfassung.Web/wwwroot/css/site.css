@@ -655,3 +655,102 @@ h3 { font-size: 1.02rem; }
 .sprachwahl { display: flex; justify-content: center; gap: .25rem; margin-top: 1rem; font-size: .85rem; }
 .sprachwahl a { padding: .15rem .5rem; border-radius: 6px; text-decoration: none; color: var(--text-gedaempft); }
 .sprachwahl a.aktiv { background: var(--blau-100); color: var(--blau-800); font-weight: 600; }
+
+/* ---------- Benachrichtigungen (Glocke in der Kopfzeile) ---------- */
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.feld > .feld-hilfe { font-weight: 400; color: var(--text-gedaempft); }
+.auswahl-gruppe { border: 0; margin: 0; padding: 0; min-width: 0; grid-column: 1 / -1; }
+.auswahl-gruppe legend { padding: 0; margin-bottom: .3rem; font-size: .85rem; font-weight: 600; color: var(--blau-900); }
+.auswahl-gruppe input[type="date"] { max-width: 220px; }
+
+.glocke { position: relative; }
+.glocke-knopf {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--rand);
+    border-radius: 50%;
+    background: var(--flaeche);
+    color: var(--blau-600);
+    cursor: pointer;
+    list-style: none;
+}
+.glocke-knopf::-webkit-details-marker { display: none; }
+.glocke-knopf::marker { content: ""; }
+.glocke-knopf:hover, .glocke[open] .glocke-knopf { background: var(--blau-100); }
+.glocke-knopf:focus-visible { outline: 2px solid var(--blau-500); outline-offset: 2px; }
+.glocke-zahl {
+    position: absolute;
+    top: -6px;
+    right: -8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    border: 2px solid var(--flaeche);
+    background: var(--rot);
+    color: #ffffff;
+    font-size: .7rem;
+    font-weight: 700;
+    line-height: 16px;
+    text-align: center;
+}
+.glocke-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 10px);
+    z-index: 40;
+    width: min(380px, calc(100vw - 2rem));
+    max-height: min(70vh, 560px);
+    display: flex;
+    flex-direction: column;
+    background: var(--flaeche);
+    border: 1px solid var(--rand);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 40px rgba(6, 31, 61, .22);
+    overflow: hidden;
+}
+.glocke-kopf { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding: .75rem 1rem; border-bottom: 1px solid var(--rand); }
+.glocke-kopf form { margin: 0; }
+.glocke-liste { overflow-y: auto; }
+.glocke-leer { margin: 0; padding: 1.25rem 1rem; color: var(--text-gedaempft); text-align: center; }
+.glocke-fuss { display: block; padding: .65rem 1rem; border-top: 1px solid var(--rand); text-align: center; font-size: .88rem; text-decoration: none; color: var(--blau-600); }
+.glocke-fuss:hover { background: var(--blau-50); }
+.link-knopf { display: inline-flex; align-items: center; gap: .3rem; border: 0; padding: 0; background: none; color: var(--blau-600); font: inherit; font-size: .82rem; cursor: pointer; }
+.link-knopf:hover { text-decoration: underline; }
+.link-knopf .icon { width: 15px; height: 15px; }
+
+.benachrichtigungs-liste { border: 1px solid var(--rand); border-radius: var(--radius); overflow: hidden; }
+.benachrichtigung-form { margin: 0; }
+.benachrichtigung-form + .benachrichtigung-form { border-top: 1px solid var(--rand); }
+.benachrichtigung {
+    display: flex;
+    gap: .65rem;
+    width: 100%;
+    padding: .75rem 1rem;
+    border: 0;
+    background: var(--flaeche);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.benachrichtigung:hover { background: var(--blau-50); }
+.benachrichtigung-punkt { flex: none; width: 9px; height: 9px; margin-top: .4rem; border-radius: 50%; background: transparent; }
+.benachrichtigung-inhalt { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.benachrichtigung-titel { font-size: .82rem; color: var(--text-gedaempft); }
+.benachrichtigung-text { font-size: .9rem; line-height: 1.35; overflow-wrap: anywhere; }
+.benachrichtigung-zeit { font-size: .75rem; color: var(--text-gedaempft); }
+.benachrichtigung.ungelesen { background: var(--blau-50); }
+.benachrichtigung.ungelesen:hover { background: var(--blau-100); }
+.benachrichtigung.ungelesen .benachrichtigung-punkt { background: var(--blau-500); }
+.benachrichtigung.ungelesen .benachrichtigung-titel,
+.benachrichtigung.ungelesen .benachrichtigung-text { font-weight: 700; color: var(--text); }
+
+@media (max-width: 520px) {
+    .glocke-panel { position: fixed; top: 60px; right: 1rem; left: 1rem; width: auto; }
+}

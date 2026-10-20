@@ -89,4 +89,29 @@
         aktualisieren();
         setInterval(aktualisieren, 1000);
     }
+    // Benachrichtigungs-Glocke: bei Klick außerhalb oder Escape schließen
+    document.addEventListener("click", function (e) {
+        document.querySelectorAll("details[data-glocke][open]").forEach(function (glocke) {
+            if (!glocke.contains(e.target)) { glocke.removeAttribute("open"); }
+        });
+    });
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+            document.querySelectorAll("details[data-glocke][open]").forEach(function (glocke) {
+                glocke.removeAttribute("open");
+                var knopf = glocke.querySelector("summary");
+                if (knopf) { knopf.focus(); }
+            });
+        }
+    });
+
+    // Eingabefeld wählt beim Bearbeiten automatisch die zugehörige Option aus (data-waehlt="id-des-radiobuttons")
+    document.querySelectorAll("[data-waehlt]").forEach(function (feld) {
+        var waehlen = function () {
+            var option = document.getElementById(feld.dataset.waehlt);
+            if (option) { option.checked = true; }
+        };
+        feld.addEventListener("focus", waehlen);
+        feld.addEventListener("input", waehlen);
+    });
 })();

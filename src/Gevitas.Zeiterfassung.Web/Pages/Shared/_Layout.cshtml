@@ -49,6 +49,7 @@
             @if (angemeldet)
             {
                 <div class="kopf-aktionen">
+                    <partial name="_Glocke" />
                     <form method="post" asp-page="/Einstellungen" asp-page-handler="Design">
                         <input type="hidden" name="wert" value="@naechstesDesign" />
                         <input type="hidden" name="zurueck" value="@zurueck" />

@@ -26,6 +26,9 @@ public sealed class ZeiterfassungOptions
     /// <summary>Wie viele Tage rückwirkend Mitarbeitende selbst Zeiten erfassen dürfen.</summary>
     public int MaxRueckwirkendeTage { get; set; } = 9;
 
+    /// <summary>Gelesene Benachrichtigungen werden nach dieser Anzahl Tage beim Start der Anwendung gelöscht.</summary>
+    public int BenachrichtigungenAufbewahrenTage { get; set; } = 180;
+
     public SaldoOptions Saldo { get; set; } = new();
     public UrlaubOptions Urlaub { get; set; } = new();
 

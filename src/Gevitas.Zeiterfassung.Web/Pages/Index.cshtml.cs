@@ -39,10 +39,4 @@ public class IndexModel : AppSeite
         OffeneGenehmigungen = User.IstFuehrungskraft() ? await _antraege.OffeneZurGenehmigungAsync(BenutzerId, BenutzerRolle, ct) : 0;
         Benachrichtigungen = await _benachrichtigungen.UngeleseneAsync(BenutzerId, ct);
     }
-
-    public async Task<IActionResult> OnPostGelesenAsync()
-    {
-        await _benachrichtigungen.AlleGelesenAsync(BenutzerId, HttpContext.RequestAborted);
-        return RedirectToPage();
-    }
 }

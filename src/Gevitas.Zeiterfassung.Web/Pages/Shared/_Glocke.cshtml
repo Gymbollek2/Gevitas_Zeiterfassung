@@ -1,0 +1,44 @@
+@inject BenachrichtigungsService Benachrichtigungen
+@{
+    var benutzerId = User.MitarbeiterId();
+    var anzahl = await Benachrichtigungen.AnzahlUngelesenAsync(benutzerId);
+    var liste = await Benachrichtigungen.NeuesteAsync(benutzerId, BenachrichtigungsService.AnzahlInDerGlocke);
+    var zurueck = Context.Request.Path + Context.Request.QueryString;
+    ViewData["Zurueck"] = zurueck;
+    var beschriftung = anzahl == 0 ? T("Benachrichtigungen – keine ungelesenen") : F("Benachrichtigungen – {0} ungelesen", anzahl);
+}
+<details class="glocke" data-glocke>
+    <summary class="glocke-knopf" title="@beschriftung" aria-label="@beschriftung">
+        <svg class="icon"><use href="#i-glocke" /></svg>
+        @if (anzahl > 0)
+        {
+            <span class="glocke-zahl" data-glocke-zahl>@(anzahl > 99 ? "99+" : anzahl.ToString(System.Globalization.CultureInfo.InvariantCulture))</span>
+        }
+    </summary>
+    <div class="glocke-panel" role="dialog" aria-label="@T("Benachrichtigungen")">
+        <div class="glocke-kopf">
+            <strong>@T("Benachrichtigungen")</strong>
+            @if (anzahl > 0)
+            {
+                <form method="post" asp-page="/Benachrichtigungen" asp-page-handler="AlleGelesen">
+                    <input type="hidden" name="zurueck" value="@zurueck" />
+                    <button type="submit" class="link-knopf"><svg class="icon"><use href="#i-haken" /></svg>@T("Alle als gelesen markieren")</button>
+                </form>
+            }
+        </div>
+        @if (liste.Count == 0)
+        {
+            <p class="glocke-leer">@T("Keine Benachrichtigungen vorhanden.")</p>
+        }
+        else
+        {
+            <div class="glocke-liste">
+                @foreach (var b in liste)
+                {
+                    <partial name="_BenachrichtigungEintrag" model="b" />
+                }
+            </div>
+        }
+        <a class="glocke-fuss" asp-page="/Benachrichtigungen">@T("Alle Benachrichtigungen anzeigen")</a>
+    </div>
+</details>

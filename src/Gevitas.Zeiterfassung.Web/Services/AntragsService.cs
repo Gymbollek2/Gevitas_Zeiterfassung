@@ -156,6 +156,7 @@ public sealed class AntragsService
         {
             MitarbeiterId = mitarbeiterId,
             ArtCode = art.Code,
+            Art = art,
             Von = von,
             Bis = bis,
             Status = AbwesenheitsStatus.Beantragt,
@@ -183,11 +184,13 @@ public sealed class AntragsService
         if (abwesenheit.Status == AbwesenheitsStatus.Beantragt)
         {
             abwesenheit.Status = AbwesenheitsStatus.Zurueckgezogen;
-            var offene = await _db.Antraege.Where(a => a.AbwesenheitId == abwesenheit.Id && a.Status == AntragsStatus.Offen).ToListAsync(ct);
+            var offene = await _db.Antraege.Include(a => a.Antragsteller)
+                .Where(a => a.AbwesenheitId == abwesenheit.Id && a.Status == AntragsStatus.Offen).ToListAsync(ct);
             foreach (var antrag in offene)
             {
                 antrag.Status = AntragsStatus.Zurueckgezogen;
                 antrag.EntschiedenAm = _uhr.Jetzt;
+                await ZurueckgezogenMeldenAsync(antrag, ct);
             }
 
             await _db.SaveChangesAsync(ct);
@@ -284,7 +287,7 @@ public sealed class AntragsService
 
     public async Task<Ergebnis> ZurueckziehenAsync(int mitarbeiterId, int antragId, CancellationToken ct = default)
     {
-        var antrag = await _db.Antraege.Include(a => a.Abwesenheit)
+        var antrag = await _db.Antraege.Include(a => a.Abwesenheit).ThenInclude(a => a!.Art).Include(a => a.Antragsteller)
             .FirstOrDefaultAsync(a => a.Id == antragId && a.AntragstellerId == mitarbeiterId, ct);
         if (antrag is null || antrag.Status != AntragsStatus.Offen)
         {
@@ -305,6 +308,7 @@ public sealed class AntragsService
 
         antrag.Status = AntragsStatus.Zurueckgezogen;
         antrag.EntschiedenAm = _uhr.Jetzt;
+        await ZurueckgezogenMeldenAsync(antrag, ct);
         await _db.SaveChangesAsync(ct);
         return Ergebnis.Ok(T("Der Antrag wurde gelöscht. Er wird der Führungskraft nicht mehr angezeigt."));
     }
@@ -339,8 +343,6 @@ public sealed class AntragsService
             return Ergebnis.Fehler(T("Bei einer Ablehnung muss eine Begründung angegeben werden."));
         }
 
-        var beschreibung = Beschreibung(antrag);
-
         if (genehmigen && antrag.Stufe < antrag.Stufen)
         {
             antrag.Stufe++;
@@ -348,8 +350,12 @@ public sealed class AntragsService
                 await _db.Mitarbeiter.Where(m => m.Id == benutzerId).Select(m => m.VorgesetzterId).FirstOrDefaultAsync(ct),
                 antrag.AntragstellerId, ct);
             antrag.Entscheidungsbemerkung = Bereinigen(bemerkung);
+            var naechster = await GenehmigerNameOderNullAsync(antrag.GenehmigerId, ct);
             await BenachrichtigenAsync(antrag.GenehmigerId, "Neuer Antrag zur Genehmigung",
-                F("{0}: {1} (Stufe {2} von {3})", antrag.Antragsteller!.VollerName, beschreibung, antrag.Stufe, antrag.Stufen), LinkGenehmiger, ct);
+                () => F("{0}: {1} (Stufe {2} von {3})", antrag.Antragsteller!.VollerName, Beschreibung(antrag), antrag.Stufe, antrag.Stufen), LinkGenehmiger, ct);
+            await _benachrichtigungen.BenachrichtigenAsync(antrag.AntragstellerId, "Antrag weitergeleitet",
+                () => F("Ihr Antrag „{0}“ wurde in Stufe {1} genehmigt und an {2} weitergeleitet.", Beschreibung(antrag), antrag.Stufe - 1, naechster ?? T("die Personalabteilung")),
+                LinkEigene, ct);
             await _db.SaveChangesAsync(ct);
             return Ergebnis.Ok(F("Stufe {0} genehmigt – der Antrag wurde an {1} weitergeleitet.", antrag.Stufe - 1, await GenehmigerNameAsync(antrag.GenehmigerId, ct)));
         }
@@ -380,9 +386,13 @@ public sealed class AntragsService
 
         // Titel bleibt als deutscher Schlüssel gespeichert und wird bei der Anzeige übersetzt
         var titel = genehmigen ? "Antrag genehmigt" : "Antrag abgelehnt";
-        var text = (genehmigen ? F("Ihr Antrag „{0}“ wurde genehmigt.", beschreibung) : F("Ihr Antrag „{0}“ wurde abgelehnt.", beschreibung))
-                   + (string.IsNullOrWhiteSpace(bemerkung) ? string.Empty : " " + F("Bemerkung: {0}", bemerkung.Trim()));
-        await BenachrichtigenAsync(antrag.AntragstellerId, titel, text, LinkEigene, ct);
+        var entscheider = await GenehmigerNameOderNullAsync(benutzerId, ct);
+        string EntscheidungsText() =>
+            (genehmigen
+                ? F("Ihr Antrag „{0}“ wurde von {1} genehmigt.", Beschreibung(antrag), entscheider ?? T("die Personalabteilung"))
+                : F("Ihr Antrag „{0}“ wurde von {1} abgelehnt.", Beschreibung(antrag), entscheider ?? T("die Personalabteilung")))
+            + (string.IsNullOrWhiteSpace(bemerkung) ? string.Empty : " " + F("Bemerkung: {0}", bemerkung.Trim()));
+        await _benachrichtigungen.BenachrichtigenAsync(antrag.AntragstellerId, titel, EntscheidungsText, LinkEigene, ct);
         await _db.SaveChangesAsync(ct);
         return Ergebnis.Ok(genehmigen
             ? F("Antrag von {0} genehmigt.", antrag.Antragsteller!.VollerName)
@@ -470,13 +480,57 @@ public sealed class AntragsService
         _db.Antraege.Add(antrag);
 
         await BenachrichtigenAsync(antrag.GenehmigerId, "Neuer Antrag zur Genehmigung",
-            $"{antragsteller.VollerName}: {Beschreibung(antrag)}" + (antrag.Bemerkung is null ? string.Empty : $" – {antrag.Bemerkung}"),
+            () => $"{antragsteller.VollerName}: {Beschreibung(antrag)}" + (antrag.Bemerkung is null ? string.Empty : $" – {antrag.Bemerkung}"),
             LinkGenehmiger, ct);
+
+        var genehmiger = await GenehmigerNameOderNullAsync(antrag.GenehmigerId, ct);
+        await _benachrichtigungen.BenachrichtigenAsync(antragsteller.Id, "Antrag gestellt",
+            () => F("Ihr Antrag „{0}“ wurde an {1} zur Genehmigung gesendet.", Beschreibung(antrag), genehmiger ?? T("die Personalabteilung")),
+            LinkEigene, ct);
         return antrag;
     }
 
+    /// <summary>
+    /// Ermittelt nach einer Änderung der Führungskraft bzw. des abweichenden Genehmigers den zuständigen Genehmiger
+    /// aller offenen Anträge (erste Stufe) einer Person neu und benachrichtigt die neue Genehmigerin bzw. den neuen Genehmiger.
+    /// </summary>
+    /// <returns>Anzahl der umgehängten Anträge.</returns>
+    public async Task<int> GenehmigerAktualisierenAsync(int mitarbeiterId, CancellationToken ct = default)
+    {
+        var mitarbeiter = await _db.Mitarbeiter.FirstOrDefaultAsync(m => m.Id == mitarbeiterId, ct);
+        if (mitarbeiter is null)
+        {
+            return 0;
+        }
+
+        var offene = await _db.Antraege
+            .Include(a => a.Abwesenheit).ThenInclude(a => a!.Art)
+            .Where(a => a.AntragstellerId == mitarbeiterId && a.Status == AntragsStatus.Offen && a.Stufe == 1)
+            .ToListAsync(ct);
+        var neu = await GenehmigerErmittelnAsync(mitarbeiter, ct);
+        var umgehaengt = 0;
+
+        foreach (var antrag in offene.Where(a => a.GenehmigerId != neu))
+        {
+            antrag.GenehmigerId = neu;
+            antrag.Antragsteller = mitarbeiter;
+            umgehaengt++;
+            await BenachrichtigenAsync(neu, "Neuer Antrag zur Genehmigung",
+                () => $"{mitarbeiter.VollerName}: {Beschreibung(antrag)}" + (antrag.Bemerkung is null ? string.Empty : $" – {antrag.Bemerkung}"),
+                LinkGenehmiger, ct);
+        }
+
+        await _db.SaveChangesAsync(ct);
+        return umgehaengt;
+    }
+
+    private Task ZurueckgezogenMeldenAsync(Antrag antrag, CancellationToken ct) =>
+        BenachrichtigenAsync(antrag.GenehmigerId, "Antrag zurückgezogen",
+            () => F("{0} hat den Antrag „{1}“ zurückgezogen. Er muss nicht mehr bearbeitet werden.", antrag.Antragsteller?.VollerName ?? string.Empty, Beschreibung(antrag)),
+            LinkGenehmiger, ct);
+
     /// <summary>Benachrichtigt den Genehmiger bzw. – wenn keiner hinterlegt ist – alle Mitarbeitenden der Personalabteilung.</summary>
-    private async Task BenachrichtigenAsync(int? empfaengerId, string titel, string text, string link, CancellationToken ct)
+    private async Task BenachrichtigenAsync(int? empfaengerId, string titel, Func<string> text, string link, CancellationToken ct)
     {
         if (empfaengerId is int id)
         {
@@ -512,6 +566,11 @@ public sealed class AntragsService
                 break;
         }
     }
+
+    private async Task<string?> GenehmigerNameOderNullAsync(int? genehmigerId, CancellationToken ct) =>
+        genehmigerId is null
+            ? null
+            : await _db.Mitarbeiter.AsNoTracking().Where(x => x.Id == genehmigerId).Select(x => x.Vorname + " " + x.Nachname).FirstOrDefaultAsync(ct);
 
     private async Task<string> GenehmigerNameAsync(int? genehmigerId, CancellationToken ct)
     {

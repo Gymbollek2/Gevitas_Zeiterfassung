@@ -17,12 +17,14 @@ Die Anwendung läuft lokal unter **https://localhost:5016** oder als **Docker-Co
 5. [Lokal starten (https://localhost:5016)](#lokal-starten-httpslocalhost5016)
 6. [Mit Docker starten](#mit-docker-starten)
 7. [Erste Anmeldung & Benutzer](#erste-anmeldung--benutzer)
-8. [Darkmode & Sprache](#darkmode--sprache)
-9. [Konfiguration (appsettings.json)](#konfiguration-appsettingsjson)
-10. [Tests](#tests)
-11. [Versionierung](#versionierung)
-12. [Projektstruktur](#projektstruktur)
-13. [Fehlerbehebung](#fehlerbehebung)
+8. [Benachrichtigungen](#benachrichtigungen)
+9. [Mitarbeitende anlegen](#mitarbeitende-anlegen)
+10. [Darkmode & Sprache](#darkmode--sprache)
+11. [Konfiguration (appsettings.json)](#konfiguration-appsettingsjson)
+12. [Tests](#tests)
+13. [Versionierung](#versionierung)
+14. [Projektstruktur](#projektstruktur)
+15. [Fehlerbehebung](#fehlerbehebung)
 
 ---
 
@@ -41,7 +43,8 @@ Die Anwendung läuft lokal unter **https://localhost:5016** oder als **Docker-Co
 | **Urlaub** | Jahresanspruch (anteilig im Eintrittsjahr), Übertrag mit Verfall 31.03. bzw. 31.05., Urlaubssaldo (tagesaktuell), Resturlaub (Plan zum 31.12.) |
 | **Regelverletzungen** | Fehlende Buchungen, > 10 Std., Rahmen, Saldo-Grenzen, Ruhezeit (11 Std.) – Quittierung durch Mitarbeitende |
 | **Berichte** | 500 Monatsjournal, 539 Saldo-Ampel, 540 Pausenabzug, 542 Urlaubsübersicht, 544 Arbeitszeit > 10, 546 Ruhezeitverletzungen – Druck/PDF und CSV-Export |
-| **Verwaltung** | Mitarbeitende, Rollen, Führungskraft, abweichender Genehmiger, Sollzeit, Urlaubsanspruch, Passwort-Reset |
+| **Benachrichtigungen** | Glocke oben rechts mit Zähler der ungelesenen Nachrichten, ungelesene fett, Klick markiert als gelesen und öffnet das Ziel, „Alle als gelesen markieren“, Übersichtsseite – optional zusätzlich per E-Mail |
+| **Verwaltung** | Mitarbeitende, Rollen, Führungskraft (nur Personen mit Führungsrolle wählbar), abweichender Genehmiger, Beginn der Zeiterfassung, Sollzeit, Urlaubsanspruch, Passwort-Reset |
 | **Darstellung & Sprache** | Darkmode (Hell/Dunkel/Wie System, Umschalter in der Kopfzeile), Oberfläche auf Deutsch oder Englisch – pro Benutzer gespeichert, auf der Anmeldeseite wählbar |
 | **Sicherheit** | Cookie-Anmeldung, PBKDF2-Passwort-Hashes, Rollen, Passwortänderung bei Erstanmeldung, Anti-Forgery, CSP und weitere Sicherheits-Header, HTTPS/HSTS |
 
@@ -209,6 +212,46 @@ z. B. in der `docker-compose.yml`: `Seed__AdminPasswort: "EinSicheresPasswort1"`
 
 ---
 
+## Benachrichtigungen
+
+Oben rechts in der Kopfzeile befindet sich eine **Glocke**. Die rote Zahl zeigt die Anzahl der ungelesenen
+Benachrichtigungen. Ein Klick auf die Glocke öffnet die neuesten Benachrichtigungen – ungelesene sind **fett** und
+blau markiert. Ein Klick auf eine Benachrichtigung markiert sie als gelesen (die Zahl verringert sich) und öffnet die
+passende Seite. Mit **„Alle als gelesen markieren“** werden alle auf einmal erledigt; „Alle Benachrichtigungen anzeigen“
+öffnet die vollständige Liste.
+
+Benachrichtigt wird bei:
+
+| Ereignis | Empfänger |
+|---|---|
+| Antrag gestellt | Antragsteller/in (Bestätigung) und Genehmiger/in (bzw. Personalabteilung) |
+| Antrag genehmigt / abgelehnt | Antragsteller/in (inkl. Bemerkung) |
+| Zweistufiger Antrag weitergeleitet | Antragsteller/in und nächste Genehmigungsstufe |
+| Antrag zurückgezogen bzw. gelöscht | Genehmiger/in |
+| Führungskraft oder Vertretung geändert | Person, neue Führungskraft bzw. Vertretung; offene Anträge gehen automatisch an die neue Genehmigerin bzw. den neuen Genehmiger |
+| Zugang eingerichtet | neue Person (inkl. Beginn der Zeiterfassung) |
+| Zeitbuchungen oder Konten durch die Personalabteilung geändert | betroffene Person |
+
+Der Text wird in der Sprache der Empfängerin bzw. des Empfängers erstellt. Ist `Smtp:Aktiv` gesetzt, geht jede
+Benachrichtigung zusätzlich per E-Mail raus. Gelesene Benachrichtigungen werden nach
+`Zeiterfassung:BenachrichtigungenAufbewahrenTage` (Standard 180) beim Start gelöscht.
+
+## Mitarbeitende anlegen
+
+* **Disziplinarische Führungskraft / abweichender Genehmiger:** Wählbar sind nur aktive Personen mit der Rolle
+  Führungskraft, Personal oder Administrator – nicht die Person selbst und keine ihr unterstellten Personen.
+* **Zeiterfassung ab:** Standard ist **„Am Folgetag der Accounterstellung“**, alternativ ein beliebiger anderer Tag.
+  Sollzeit und Kontostände werden erst ab diesem Tag berechnet – niemand startet mit Minusstunden, auch wenn das
+  Eintrittsdatum weit zurückliegt. Der Tag kann später unter „Bearbeiten“ geändert werden.
+* Eine Führungskraft kann erst herabgestuft oder deaktiviert werden, wenn ihr niemand mehr zugeordnet ist und keine
+  Anträge mehr offen sind.
+* Die eigene Rolle und der eigene Zugang können nicht geändert bzw. deaktiviert werden.
+* Administratoren können nur von Administratoren angelegt oder bearbeitet werden.
+* Beim Update auf 1.2.0 wird der Erfassungsbeginn bestehender Personen einmalig auf den Tag ihrer ersten Zeitbuchung
+  gesetzt (ohne Buchungen auf den Tag des Updates).
+
+---
+
 ## Darkmode & Sprache
 
 * **Darkmode:** Über das Mond-/Sonnensymbol oben rechts oder unter **Einstellungen → Darstellung** (Hell, Dunkel, Wie System).
@@ -216,7 +259,8 @@ z. B. in der `docker-compose.yml`: `Seed__AdminPasswort: "EinSicheresPasswort1"`
 * Beide Einstellungen werden pro Benutzer in der Datenbank gespeichert und nach jeder Anmeldung übernommen.
 * Übersetzungen stehen in `Services/Uebersetzungen.cs` (Schlüssel = deutscher Text). Neue Texte im Code mit `T("…")` bzw.
   `F("…", wert)` kennzeichnen – ein Test schlägt fehl, solange eine englische Übersetzung fehlt.
-* Gespeicherte Inhalte (z. B. Bemerkungen, Buchungsverlauf, Texte von Benachrichtigungen) bleiben in der Sprache, in der sie erfasst wurden.
+* Gespeicherte Inhalte (z. B. Bemerkungen, Buchungsverlauf) bleiben in der Sprache, in der sie erfasst wurden.
+  Benachrichtigungen werden in der Sprache der Empfängerin bzw. des Empfängers erstellt.
 
 ## Konfiguration (appsettings.json)
 
@@ -237,6 +281,7 @@ Umgebungsvariable überschreiben (`:` wird zu `__`, z. B. `Zeiterfassung__MaxArb
 | `Zeiterfassung:MaxArbeitszeitMinuten` | Kappung der täglichen Arbeitszeit | 600 (10 Std.) |
 | `Zeiterfassung:Pausen` | Mindestpause, Schwellen 6/9 Std., 30/45 Min., Blockregel | gesetzlich |
 | `Zeiterfassung:MaxRueckwirkendeTage` | Rückwirkende Erfassung | 9 |
+| `Zeiterfassung:BenachrichtigungenAufbewahrenTage` | Gelesene Benachrichtigungen werden danach gelöscht | 180 |
 | `Zeiterfassung:Saldo` | Unter-/Obergrenze, Ampelgrenzen (Minuten) | −40 / +80 Std., 20 / 40 Std. |
 | `Zeiterfassung:Urlaub` | Jahresurlaub, Verfall, verlängerter Verfall, Antragszeitraum Übertrag | 30, 31.03., 31.05., 01.01.–01.03. |
 | `Zeiterfassung:KrankOhneAttestMaxTage` | Max. zusammenhängende Tage „Krank o. A.“ | 3 |
@@ -291,6 +336,7 @@ Das Projekt folgt [Semantic Versioning](https://semver.org/lang/de/). Die aktuel
 | 0.5.0 | Regelverletzungen, Berichte, Gruppenkalender |
 | 1.0.0 | Dashboard-Einstellungen, Integrationstests, CI, Dokumentation |
 | 1.1.0 | Darkmode, Englisch, Login per Personalnummer, zentrierte Anmeldung |
+| 1.2.0 | Benachrichtigungs-Glocke, Prüfungen in der Mitarbeiterverwaltung, Beginn der Zeiterfassung |
 
 Jede Version liegt als Branch `release/vX.Y.Z` vor. Daraus werden die Git-Tags erzeugt mit:
 
@@ -299,7 +345,7 @@ Jede Version liegt als Branch `release/vX.Y.Z` vor. Daraus werden die Git-Tags e
 ```
 
 Neue Version erstellen: Version in `Directory.Build.props` erhöhen, `CHANGELOG.md` ergänzen, committen und taggen
-(`git tag -a v1.1.0 -m "Version 1.1.0" && git push origin v1.1.0`).
+(`git tag -a v1.2.0 -m "Version 1.2.0" && git push origin v1.2.0`).
 
 ---
 

@@ -2,6 +2,7 @@ using System.Globalization;
 using Gevitas.Zeiterfassung.Web.Data;
 using Gevitas.Zeiterfassung.Web.Infrastructure;
 using Gevitas.Zeiterfassung.Web.Options;
+using Gevitas.Zeiterfassung.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Localization;
@@ -62,6 +63,10 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services.AddHealthChecks();
 
 // ---------- Fachliche Dienste ----------
+// Umlaute und Sonderzeichen nicht als HTML-Entities ausgeben (lesbareres HTML, Sicherheit bleibt erhalten)
+builder.Services.Configure<Microsoft.Extensions.WebEncoders.WebEncoderOptions>(o =>
+    o.TextEncoderSettings = new System.Text.Encodings.Web.TextEncoderSettings(System.Text.Unicode.UnicodeRanges.All));
+
 builder.Services.AddZeiterfassungDienste();
 
 var app = builder.Build();
@@ -70,6 +75,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     await scope.ServiceProvider.GetRequiredService<DatenbankInitialisierung>().AusfuehrenAsync();
+    await scope.ServiceProvider.GetRequiredService<BenachrichtigungsService>().AufraeumenAsync();
 }
 
 // ---------- HTTP-Pipeline ----------

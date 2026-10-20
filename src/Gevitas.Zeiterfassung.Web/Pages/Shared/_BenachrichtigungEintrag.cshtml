@@ -1,0 +1,19 @@
+@model Benachrichtigung
+@* Eine Benachrichtigung als anklickbarer Eintrag. Ein Klick markiert sie als gelesen und öffnet das Ziel. *@
+<form method="post" asp-page="/Benachrichtigungen" asp-page-handler="Oeffnen" class="benachrichtigung-form">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <input type="hidden" name="zurueck" value="@(ViewData["Zurueck"] as string ?? "/Benachrichtigungen")" />
+    <button type="submit" class="benachrichtigung @(Model.Gelesen ? "gelesen" : "ungelesen")"
+            title="@(Model.Gelesen ? T("Gelesen") : T("Ungelesen – zum Öffnen und als gelesen markieren klicken"))">
+        <span class="benachrichtigung-punkt" aria-hidden="true"></span>
+        <span class="benachrichtigung-inhalt">
+            <span class="benachrichtigung-titel">@T(Model.Titel)</span>
+            <span class="benachrichtigung-text">@Model.Text</span>
+            <span class="benachrichtigung-zeit">@Zeitformat.Zeitpunkt(Model.ErstelltAm)</span>
+        </span>
+        @if (!Model.Gelesen)
+        {
+            <span class="sr-only">@T("Ungelesen")</span>
+        }
+    </button>
+</form>

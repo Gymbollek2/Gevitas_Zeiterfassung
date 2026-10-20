@@ -1,0 +1,33 @@
+@page
+@model Gevitas.Zeiterfassung.Web.Pages.BenachrichtigungenModel
+@{
+    ViewData["Title"] = T("Benachrichtigungen");
+}
+<section class="karte">
+    <div class="karte-kopf">
+        <h2><svg class="icon"><use href="#i-glocke" /></svg>@T("Alle Benachrichtigungen")</h2>
+        @if (Model.Ungelesen > 0)
+        {
+            <form method="post" asp-page-handler="AlleGelesen">
+                <input type="hidden" name="zurueck" value="/Benachrichtigungen" />
+                <button type="submit" class="knopf knopf-sekundaer knopf-klein">@T("Alle als gelesen markieren")</button>
+            </form>
+        }
+    </div>
+    <p class="feld-hilfe">
+        @(Model.Ungelesen == 0 ? T("Alle Benachrichtigungen sind gelesen.") : F("{0} ungelesene Benachrichtigung(en) – fett dargestellt. Ein Klick öffnet die Benachrichtigung und markiert sie als gelesen.", Model.Ungelesen))
+    </p>
+    @if (Model.Liste.Count == 0)
+    {
+        <div class="hinweis">@T("Keine Benachrichtigungen vorhanden.")</div>
+    }
+    else
+    {
+        <div class="benachrichtigungs-liste">
+            @foreach (var b in Model.Liste)
+            {
+                <partial name="_BenachrichtigungEintrag" model="b" />
+            }
+        </div>
+    }
+</section>

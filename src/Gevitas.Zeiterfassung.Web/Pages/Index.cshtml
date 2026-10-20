@@ -93,30 +93,20 @@
 
 @if (Model.Zeigt(DashboardKacheln.Benachrichtigungen) && Model.Benachrichtigungen.Count > 0)
 {
+    ViewData["Zurueck"] = "/";
     <section class="karte">
         <div class="karte-kopf">
-            <h2>@T("Benachrichtigungen")</h2>
-            <form method="post" asp-page-handler="Gelesen">
+            <h2><svg class="icon"><use href="#i-glocke" /></svg>@T("Ungelesene Benachrichtigungen")</h2>
+            <form method="post" asp-page="/Benachrichtigungen" asp-page-handler="AlleGelesen">
+                <input type="hidden" name="zurueck" value="/" />
                 <button type="submit" class="knopf knopf-sekundaer knopf-klein">@T("Alle als gelesen markieren")</button>
             </form>
         </div>
-        <ul class="detail-liste">
+        <div class="benachrichtigungs-liste">
             @foreach (var b in Model.Benachrichtigungen)
             {
-                <li>
-                    <span>
-                        <strong>@T(b.Titel)</strong><br />
-                        @b.Text
-                    </span>
-                    <span style="text-align:right;white-space:nowrap">
-                        @Zeitformat.Zeitpunkt(b.ErstelltAm)
-                        @if (!string.IsNullOrEmpty(b.Link))
-                        {
-                            <br /><a href="@b.Link">@T("Öffnen")</a>
-                        }
-                    </span>
-                </li>
+                <partial name="_BenachrichtigungEintrag" model="b" />
             }
-        </ul>
+        </div>
     </section>
 }

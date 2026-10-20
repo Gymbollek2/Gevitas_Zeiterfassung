@@ -16,6 +16,7 @@ public class ZeitkorrekturenModel : AppSeite
     private readonly MitarbeiterService _mitarbeiter;
     private readonly AntragsService _antraege;
     private readonly KontobuchungService _kontobuchungen;
+    private readonly BenachrichtigungsService _benachrichtigungen;
     private readonly IAppUhr _uhr;
 
     public ZeitkorrekturenModel(
@@ -24,6 +25,7 @@ public class ZeitkorrekturenModel : AppSeite
         MitarbeiterService mitarbeiter,
         AntragsService antraege,
         KontobuchungService kontobuchungen,
+        BenachrichtigungsService benachrichtigungen,
         IAppUhr uhr,
         IOptions<ZeiterfassungOptions> optionen)
     {
@@ -32,6 +34,7 @@ public class ZeitkorrekturenModel : AppSeite
         _mitarbeiter = mitarbeiter;
         _antraege = antraege;
         _kontobuchungen = kontobuchungen;
+        _benachrichtigungen = benachrichtigungen;
         _uhr = uhr;
         Optionen = optionen.Value;
     }
@@ -109,14 +112,33 @@ public class ZeitkorrekturenModel : AppSeite
 
     public async Task<IActionResult> OnPostSpeichernAsync([FromForm] BuchungEingabe eingabe)
     {
-        Melden(await _buchungen.SpeichernAsync(ZielId, eingabe, BenutzerId, OhneZeitgrenze, HttpContext.RequestAborted));
+        var ergebnis = await _buchungen.SpeichernAsync(ZielId, eingabe, BenutzerId, OhneZeitgrenze, HttpContext.RequestAborted);
+        await FremdeAenderungMeldenAsync(ergebnis, eingabe.Datum);
+        Melden(ergebnis);
         return Zurueck(eingabe.Datum);
     }
 
     public async Task<IActionResult> OnPostLoeschenAsync(int buchungId, DateOnly datum, string? bemerkung)
     {
-        Melden(await _buchungen.LoeschenAsync(ZielId, buchungId, bemerkung, BenutzerId, OhneZeitgrenze, HttpContext.RequestAborted));
+        var ergebnis = await _buchungen.LoeschenAsync(ZielId, buchungId, bemerkung, BenutzerId, OhneZeitgrenze, HttpContext.RequestAborted);
+        await FremdeAenderungMeldenAsync(ergebnis, datum);
+        Melden(ergebnis);
         return Zurueck(datum);
+    }
+
+    /// <summary>Ändert die Personalabteilung Buchungen einer anderen Person, wird diese benachrichtigt.</summary>
+    private async Task FremdeAenderungMeldenAsync(Ergebnis ergebnis, DateOnly datum)
+    {
+        if (!ergebnis.Erfolg || ZielId == BenutzerId)
+        {
+            return;
+        }
+
+        var name = User.Identity?.Name ?? string.Empty;
+        await _benachrichtigungen.BenachrichtigenAsync(ZielId, "Zeitbuchung geändert",
+            () => F("{0} hat Ihre Zeitbuchungen am {1} geändert. Details stehen im Buchungsverlauf des Tages.", name, Zeitformat.Datum(datum)),
+            $"/Zeitwirtschaft/Zeitkorrekturen?tag={datum:yyyy-MM-dd}", HttpContext.RequestAborted);
+        await _benachrichtigungen.SpeichernAsync(HttpContext.RequestAborted);
     }
 
     public async Task<IActionResult> OnPostBemerkungAsync(DateOnly datum, string? text)

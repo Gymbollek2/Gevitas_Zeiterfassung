@@ -53,6 +53,12 @@ public class WebAnwendungTests : IClassFixture<ZeiterfassungFactory>
 
     private HttpClient Client() => _factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = true });
 
+    private static async Task<HttpResponseMessage> PostenAsync(HttpClient client, string seite, string url, Dictionary<string, string> felder)
+    {
+        felder["__RequestVerificationToken"] = Token.Match(seite).Groups[1].Value;
+        return await client.PostAsync(url, new FormUrlEncodedContent(felder));
+    }
+
     private static async Task<HttpResponseMessage> AnmeldenAsync(HttpClient client, string benutzer, string passwort)
     {
         var seite = await client.GetStringAsync("/Account/Anmelden");
@@ -183,6 +189,7 @@ public class WebAnwendungTests : IClassFixture<ZeiterfassungFactory>
     [InlineData("/MeineDaten")]
     [InlineData("/Information")]
     [InlineData("/Einstellungen")]
+    [InlineData("/Benachrichtigungen")]
     [InlineData("/Account/PasswortAendern")]
     [InlineData("/Verwaltung/Mitarbeiter")]
     [InlineData("/Verwaltung/MitarbeiterBearbeiten")]
@@ -238,6 +245,66 @@ public class WebAnwendungTests : IClassFixture<ZeiterfassungFactory>
         var neuerBrowser = Client();
         await AnmeldenAsync(neuerBrowser, "fuehrung", "Demo1234!");
         Assert.Contains("data-theme=\"dunkel\"", await neuerBrowser.GetStringAsync("/"));
+    }
+
+    [Fact]
+    public async Task Glocke_zeigt_ungelesene_Benachrichtigungen_und_markiert_sie_als_gelesen()
+    {
+        // Antrag stellen: Antragstellerin und Führungskraft werden benachrichtigt
+        var kollegin = Client();
+        await AnmeldenAsync(kollegin, "kollegin", "Demo1234!");
+        var tag = DateOnly.FromDateTime(DateTime.Today.AddDays(60)).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
+        var formular = await kollegin.GetStringAsync("/Antraege/Abwesenheit");
+        var antrag = await PostenAsync(kollegin, formular, "/Antraege/Abwesenheit", new Dictionary<string, string>
+        {
+            ["Von"] = tag,
+            ["Bis"] = tag,
+            ["Art"] = "GZ"
+        });
+        Assert.Equal(HttpStatusCode.Redirect, antrag.StatusCode);
+        var eigene = await kollegin.GetStringAsync("/");
+        Assert.Contains("data-glocke-zahl", eigene);
+        Assert.Contains("Antrag gestellt", eigene);
+
+        var fuehrung = Client();
+        await AnmeldenAsync(fuehrung, "fuehrung", "Demo1234!");
+        var seite = await fuehrung.GetStringAsync("/Benachrichtigungen");
+        var eintrag = Regex.Match(seite, "name=\"id\" value=\"(\\d+)\"[\\s\\S]*?class=\"benachrichtigung (\\w+)\"[\\s\\S]*?Neuer Antrag zur Genehmigung");
+        Assert.True(eintrag.Success);
+        Assert.Equal("ungelesen", eintrag.Groups[2].Value);
+        Assert.Contains("data-glocke-zahl", seite);
+
+        // Klick auf die Benachrichtigung: gelesen und weiter zum Ziel
+        var oeffnen = await PostenAsync(fuehrung, seite, "/Benachrichtigungen?handler=Oeffnen", new Dictionary<string, string>
+        {
+            ["id"] = eintrag.Groups[1].Value,
+            ["zurueck"] = "/"
+        });
+        Assert.Equal(HttpStatusCode.Redirect, oeffnen.StatusCode);
+        Assert.Contains("/Antraege", oeffnen.Headers.Location!.ToString());
+        seite = await fuehrung.GetStringAsync("/Benachrichtigungen");
+        Assert.Contains($"name=\"id\" value=\"{eintrag.Groups[1].Value}\"", seite);
+        Assert.Matches($"value=\"{eintrag.Groups[1].Value}\"[\\s\\S]*?class=\"benachrichtigung gelesen\"", seite);
+
+        // Alle als gelesen markieren: der Zähler verschwindet
+        var alle = await PostenAsync(fuehrung, seite, "/Benachrichtigungen?handler=AlleGelesen", new Dictionary<string, string> { ["zurueck"] = "/" });
+        Assert.Equal(HttpStatusCode.Redirect, alle.StatusCode);
+        Assert.DoesNotContain("data-glocke-zahl", await fuehrung.GetStringAsync("/"));
+    }
+
+    [Fact]
+    public async Task Neuer_Account_bietet_nur_Fuehrungskraefte_und_den_Erfassungsbeginn_an()
+    {
+        var client = Client();
+        await AnmeldenAsync(client, "personal", "Demo1234!");
+
+        var seite = await client.GetStringAsync("/Verwaltung/MitarbeiterBearbeiten");
+
+        Assert.Contains("Führung, Frieda", seite);
+        Assert.DoesNotContain("Mitarbeiter, Mischa", seite);
+        Assert.DoesNotContain("Kollegin, Klara", seite);
+        Assert.Contains("Am Folgetag der Accounterstellung", seite);
+        Assert.DoesNotContain("value=\"Administrator\"", seite); // Personal darf keine Administratoren ernennen
     }
 
     [Fact]

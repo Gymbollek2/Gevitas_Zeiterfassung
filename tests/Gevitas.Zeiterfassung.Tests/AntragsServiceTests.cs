@@ -82,7 +82,56 @@ public class AntragsServiceTests : IDisposable
 
         var abwesenheit = await _db.Abwesenheiten.SingleAsync();
         Assert.Equal(AbwesenheitsStatus.Genehmigt, abwesenheit.Status);
-        Assert.Equal(1, await _db.Benachrichtigungen.CountAsync(b => b.MitarbeiterId == _ma.Id));
+
+        // Antragsteller: Bestätigung der Antragstellung und Entscheidung
+        var titel = await _db.Benachrichtigungen.Where(b => b.MitarbeiterId == _ma.Id).OrderBy(b => b.Id).Select(b => b.Titel).ToListAsync();
+        Assert.Equal(new[] { "Antrag gestellt", "Antrag genehmigt" }, titel);
+        var genehmigt = await _db.Benachrichtigungen.Where(b => b.MitarbeiterId == _ma.Id).OrderBy(b => b.Id).LastAsync();
+        Assert.Contains("Urlaub", genehmigt.Text);
+        Assert.Contains("chef Test", genehmigt.Text);
+    }
+
+    [Fact]
+    public async Task Benachrichtigung_wird_in_der_Sprache_des_Empfaengers_erstellt()
+    {
+        _chef.Sprache = "en";
+        await _db.SaveChangesAsync();
+
+        await Service().AbwesenheitBeantragenAsync(_ma.Id, new DateOnly(2026, 11, 2), new DateOnly(2026, 11, 3), "U", null);
+
+        var anChef = await _db.Benachrichtigungen.SingleAsync(b => b.MitarbeiterId == _chef.Id);
+        var anMa = await _db.Benachrichtigungen.SingleAsync(b => b.MitarbeiterId == _ma.Id);
+        Assert.Equal("Neuer Antrag zur Genehmigung", anChef.Titel); // Titel als Schlüssel, Übersetzung bei der Anzeige
+        Assert.Contains("Absence: Leave 02/11/2026", anChef.Text);
+        Assert.Contains("Abwesenheit: Urlaub 02.11.2026", anMa.Text);
+        Assert.Equal("de", Texte.Sprache);
+    }
+
+    [Fact]
+    public async Task Zurueckgezogener_Antrag_wird_dem_Genehmiger_gemeldet()
+    {
+        var service = Service();
+        await service.AbwesenheitBeantragenAsync(_ma.Id, new DateOnly(2026, 11, 2), new DateOnly(2026, 11, 3), "U", null);
+        var antrag = await LetzterAntragAsync();
+
+        Assert.True((await service.ZurueckziehenAsync(_ma.Id, antrag.Id)).Erfolg);
+
+        Assert.True(await _db.Benachrichtigungen.AnyAsync(b => b.MitarbeiterId == _chef.Id && b.Titel == "Antrag zurückgezogen"));
+    }
+
+    [Fact]
+    public async Task Offene_Antraege_gehen_nach_Wechsel_der_Fuehrungskraft_an_die_neue()
+    {
+        var service = Service();
+        await service.AbwesenheitBeantragenAsync(_ma.Id, new DateOnly(2026, 11, 2), new DateOnly(2026, 11, 3), "U", null);
+        _ma.VorgesetzterId = _gbl.Id;
+        await _db.SaveChangesAsync();
+
+        Assert.Equal(1, await service.GenehmigerAktualisierenAsync(_ma.Id));
+
+        Assert.Equal(_gbl.Id, (await LetzterAntragAsync()).GenehmigerId);
+        Assert.True(await _db.Benachrichtigungen.AnyAsync(b => b.MitarbeiterId == _gbl.Id && b.Titel == "Neuer Antrag zur Genehmigung"));
+        Assert.Equal(0, await service.GenehmigerAktualisierenAsync(_ma.Id));
     }
 
     [Fact]

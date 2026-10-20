@@ -2,6 +2,7 @@ using Gevitas.Zeiterfassung.Web.Domain;
 using Gevitas.Zeiterfassung.Web.Infrastructure;
 using Gevitas.Zeiterfassung.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using static Gevitas.Zeiterfassung.Web.Services.Texte;
 
 namespace Gevitas.Zeiterfassung.Web.Pages.Verwaltung;
 
@@ -10,10 +11,12 @@ public class KontokorrekturenModel : AppSeite
     private readonly KontobuchungService _kontobuchungen;
     private readonly KontenService _konten;
     private readonly MitarbeiterService _mitarbeiter;
+    private readonly BenachrichtigungsService _benachrichtigungen;
     private readonly IAppUhr _uhr;
 
-    public KontokorrekturenModel(KontobuchungService kontobuchungen, KontenService konten, MitarbeiterService mitarbeiter, IAppUhr uhr)
+    public KontokorrekturenModel(KontobuchungService kontobuchungen, KontenService konten, MitarbeiterService mitarbeiter, BenachrichtigungsService benachrichtigungen, IAppUhr uhr)
     {
+        _benachrichtigungen = benachrichtigungen;
         _kontobuchungen = kontobuchungen;
         _konten = konten;
         _mitarbeiter = mitarbeiter;
@@ -52,13 +55,35 @@ public class KontokorrekturenModel : AppSeite
             return BadRequest();
         }
 
-        Melden(await _kontobuchungen.KorrigierenAsync(Ma.Value, konto, stunden, datum, bemerkung, BenutzerId, HttpContext.RequestAborted));
+        var ct = HttpContext.RequestAborted;
+        var ergebnis = await _kontobuchungen.KorrigierenAsync(Ma.Value, konto, stunden, datum, bemerkung, BenutzerId, ct);
+        if (ergebnis.Erfolg && Ma != BenutzerId)
+        {
+            var wert = stunden?.Trim() ?? string.Empty;
+            var grund = bemerkung?.Trim() ?? string.Empty;
+            await _benachrichtigungen.BenachrichtigenAsync(Ma.Value, "Kontokorrektur",
+                () => F("Die Personalabteilung hat auf Ihrem Konto „{0}“ eine Korrektur von {1} Std. zum {2} gebucht. Begründung: {3}", konto.Text(), wert, Zeitformat.Datum(datum), grund),
+                "/Zeitwirtschaft/Zeitkorrekturen", ct);
+            await _benachrichtigungen.SpeichernAsync(ct);
+        }
+
+        Melden(ergebnis);
         return RedirectToPage(new { ma = Ma });
     }
 
     public async Task<IActionResult> OnPostStornoAsync(Guid vorgang)
     {
-        Melden(await _kontobuchungen.StornierenAsync(vorgang, HttpContext.RequestAborted));
+        var ct = HttpContext.RequestAborted;
+        var ergebnis = await _kontobuchungen.StornierenAsync(vorgang, ct);
+        if (ergebnis.Erfolg && Ma is int id && id != BenutzerId)
+        {
+            await _benachrichtigungen.BenachrichtigenAsync(id, "Kontobuchung storniert",
+                () => T("Die Personalabteilung hat eine Buchung auf Ihren Zeitkonten storniert. Ihre Kontostände wurden neu berechnet."),
+                "/Zeitwirtschaft/Zeitkorrekturen", ct);
+            await _benachrichtigungen.SpeichernAsync(ct);
+        }
+
+        Melden(ergebnis);
         return RedirectToPage(new { ma = Ma });
     }
 }
