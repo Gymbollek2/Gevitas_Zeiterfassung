@@ -11,9 +11,11 @@ public class IndexModel : AppSeite
     private readonly UrlaubService _urlaub;
     private readonly AntragsService _antraege;
     private readonly BenachrichtigungsService _benachrichtigungen;
+    private readonly MitarbeiterService _mitarbeiter;
 
-    public IndexModel(KontenService konten, UrlaubService urlaub, AntragsService antraege, BenachrichtigungsService benachrichtigungen)
+    public IndexModel(KontenService konten, UrlaubService urlaub, AntragsService antraege, BenachrichtigungsService benachrichtigungen, MitarbeiterService mitarbeiter)
     {
+        _mitarbeiter = mitarbeiter;
         _konten = konten;
         _urlaub = urlaub;
         _antraege = antraege;
@@ -24,10 +26,14 @@ public class IndexModel : AppSeite
     public UrlaubsUebersicht Urlaub { get; private set; } = null!;
     public int OffeneGenehmigungen { get; private set; }
     public List<Benachrichtigung> Benachrichtigungen { get; private set; } = new();
+    public IReadOnlySet<string> Kacheln { get; private set; } = DashboardKacheln.Standard;
+
+    public bool Zeigt(string kachel) => Kacheln.Contains(kachel);
 
     public async Task OnGetAsync()
     {
         var ct = HttpContext.RequestAborted;
+        Kacheln = DashboardKacheln.Lesen((await _mitarbeiter.LadenAsync(BenutzerId, ct))?.DashboardKacheln);
         Stand = await _konten.KontostandAsync(BenutzerId, ct);
         Urlaub = await _urlaub.UebersichtAsync(BenutzerId, ct: ct);
         OffeneGenehmigungen = User.IstFuehrungskraft() ? await _antraege.OffeneZurGenehmigungAsync(BenutzerId, BenutzerRolle, ct) : 0;

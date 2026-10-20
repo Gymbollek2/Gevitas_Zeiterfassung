@@ -4,6 +4,17 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [1.0.0] – 2026-10-20
+
+Erste vollständige Version.
+
+### Hinzugefügt
+- Dashboard pro Person konfigurierbar (Seite „Einstellungen“): Terminal, Krank untertägig, Wegezeit, Konten, Benachrichtigungen
+- Integrationstests mit `WebApplicationFactory` (Anmeldung, Rechte, Sicherheits-Header, Terminal, CSV-Export, Aufruf aller Seiten)
+- GitHub-Actions-Pipeline: Build, Tests mit Abdeckung, Docker-Image
+- Skripte zum Erzeugen der Release-Tags aus den `release/*`-Branches
+- Vollständige README (HTTPS-Zertifikat, lokaler Start, Docker, Konfiguration, Tests, Versionierung, Fehlerbehebung)
+
 ## [0.5.0] – 2026-10-20
 
 ### Hinzugefügt

@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, "release/**" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-und-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: .NET SDK installieren
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Abhängigkeiten wiederherstellen
+        run: dotnet restore Gevitas_Zeiterfassung.sln
+
+      - name: Build
+        run: dotnet build Gevitas_Zeiterfassung.sln --configuration Release --no-restore
+
+      - name: Tests
+        run: dotnet test Gevitas_Zeiterfassung.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
+
+      - name: Testergebnisse hochladen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testergebnisse
+          path: "**/TestResults/**"
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: build-und-test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker-Image bauen
+        run: docker build --tag gevitas-zeiterfassung:${{ github.sha }} .

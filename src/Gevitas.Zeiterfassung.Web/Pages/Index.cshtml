@@ -14,56 +14,82 @@
     </div>
 }
 
-<div class="raster raster-2">
-    <section class="karte">
-        <div class="karte-kopf">
-            <h2><svg class="icon"><use href="#i-terminal" /></svg>Terminal</h2>
-            <partial name="_TerminalStatus" model="s" />
-        </div>
-        <div class="terminal">
-            <form method="post" asp-page="/Terminal" class="terminal-form">
-                <input type="hidden" name="aktion" value="@TerminalAktion.KommenOderGehen" />
-                <input type="hidden" name="zurueck" value="dashboard" />
-                <button type="submit" class="terminal-knopf primaer"><svg class="icon"><use href="#i-terminal" /></svg>Kommen oder Gehen</button>
-            </form>
-            <form method="post" asp-page="/Terminal" class="terminal-form">
-                <input type="hidden" name="aktion" value="@TerminalAktion.KrankUntertaegig" />
-                <input type="hidden" name="zurueck" value="dashboard" />
-                <button type="submit" class="terminal-knopf"><svg class="icon"><use href="#i-warnung" /></svg>Krank untertägig</button>
-            </form>
-            <form method="post" asp-page="/Terminal" class="terminal-form">
-                <input type="hidden" name="aktion" value="@TerminalAktion.WegezeitKommenOderGehen" />
-                <input type="hidden" name="zurueck" value="dashboard" />
-                <button type="submit" class="terminal-knopf"><svg class="icon"><use href="#i-kalender" /></svg>Wegezeit (Kommen oder Gehen)</button>
-            </form>
-        </div>
-    </section>
+@{
+    var mitTerminal = Model.Zeigt(DashboardKacheln.Terminal) || Model.Zeigt(DashboardKacheln.KrankUntertaegig) || Model.Zeigt(DashboardKacheln.Wegezeit);
+}
+<div class="raster @(mitTerminal && Model.Zeigt(DashboardKacheln.Konten) ? "raster-2" : "")">
+    @if (mitTerminal)
+    {
+        <section class="karte">
+            <div class="karte-kopf">
+                <h2><svg class="icon"><use href="#i-terminal" /></svg>Terminal</h2>
+                <partial name="_TerminalStatus" model="s" />
+            </div>
+            <div class="terminal">
+                @if (Model.Zeigt(DashboardKacheln.Terminal))
+                {
+                    <form method="post" asp-page="/Terminal" class="terminal-form">
+                        <input type="hidden" name="aktion" value="@TerminalAktion.KommenOderGehen" />
+                        <input type="hidden" name="zurueck" value="dashboard" />
+                        <button type="submit" class="terminal-knopf primaer"><svg class="icon"><use href="#i-terminal" /></svg>Kommen oder Gehen</button>
+                    </form>
+                }
+                @if (Model.Zeigt(DashboardKacheln.KrankUntertaegig))
+                {
+                    <form method="post" asp-page="/Terminal" class="terminal-form">
+                        <input type="hidden" name="aktion" value="@TerminalAktion.KrankUntertaegig" />
+                        <input type="hidden" name="zurueck" value="dashboard" />
+                        <button type="submit" class="terminal-knopf"><svg class="icon"><use href="#i-warnung" /></svg>Krank untertägig</button>
+                    </form>
+                }
+                @if (Model.Zeigt(DashboardKacheln.Wegezeit))
+                {
+                    <form method="post" asp-page="/Terminal" class="terminal-form">
+                        <input type="hidden" name="aktion" value="@TerminalAktion.WegezeitKommenOderGehen" />
+                        <input type="hidden" name="zurueck" value="dashboard" />
+                        <button type="submit" class="terminal-knopf"><svg class="icon"><use href="#i-kalender" /></svg>Wegezeit (Kommen oder Gehen)</button>
+                    </form>
+                }
+            </div>
+        </section>
+    }
 
-    <section class="karte">
-        <div class="karte-kopf">
-            <h2><svg class="icon"><use href="#i-info" /></svg>Information</h2>
-            <a class="knopf knopf-sekundaer knopf-klein" href="/">Aktualisieren</a>
-        </div>
-        <div class="kennzahlen">
-            <div class="kennzahl @(s.Saldo < 0 ? "negativ" : "")"><span class="kennzahl-label">Saldo</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.Saldo) <span class="kennzahl-einheit">Std.</span></span></div>
-            <div class="kennzahl"><span class="kennzahl-label">Arbeitszeit</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.HeuteArbeitszeit) <span class="kennzahl-einheit">Std.</span></span></div>
-            <div class="kennzahl"><span class="kennzahl-label">Sollstunden</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.HeuteSoll) <span class="kennzahl-einheit">Std.</span></span></div>
-            <div class="kennzahl"><span class="kennzahl-label">Wegezeit (Kontostand)</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.Wegezeit) <span class="kennzahl-einheit">Std.</span></span></div>
-            <div class="kennzahl"><span class="kennzahl-label">Sonderarbeitszeit</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.Sonderarbeitszeit) <span class="kennzahl-einheit">Std.</span></span></div>
-            <div class="kennzahl"><span class="kennzahl-label">Urlaubssaldo</span><span class="kennzahl-wert">@Zeitformat.Tage(u.Urlaubssaldo) <span class="kennzahl-einheit">Tage</span></span></div>
-            <div class="kennzahl"><span class="kennzahl-label">Resturlaub (Plan zum 31.12.)</span><span class="kennzahl-wert">@Zeitformat.Tage(u.ResturlaubPlan) <span class="kennzahl-einheit">Tage</span></span></div>
-        </div>
-        <p class="feld-hilfe">
-            Saldo minutenaktuell (Stand Vortag + heutige Arbeitszeit − heutiges Soll). Das Urlaubssaldo ist tagesaktuell – bereits genommener Urlaub ist abgezogen.
-            @if (u.Uebertrag > 0)
-            {
-                <span>Resturlaub aus dem Vorjahr (@Zeitformat.Tage(u.Uebertrag) Tage) verfällt nach dem @Zeitformat.Datum(u.Verfall), wenn er nicht angetreten wird.</span>
-            }
-        </p>
-    </section>
+    @if (Model.Zeigt(DashboardKacheln.Konten))
+    {
+        <section class="karte">
+            <div class="karte-kopf">
+                <h2><svg class="icon"><use href="#i-info" /></svg>Information</h2>
+                <div class="knopfleiste">
+                    <a class="knopf knopf-sekundaer knopf-klein" href="/">Aktualisieren</a>
+                    <a class="knopf knopf-sekundaer knopf-klein knopf-icon" asp-page="/Einstellungen" title="Dashboard anpassen" aria-label="Dashboard anpassen"><svg class="icon"><use href="#i-einstellungen" /></svg></a>
+                </div>
+            </div>
+            <div class="kennzahlen">
+                <div class="kennzahl @(s.Saldo < 0 ? "negativ" : "")"><span class="kennzahl-label">Saldo</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.Saldo) <span class="kennzahl-einheit">Std.</span></span></div>
+                <div class="kennzahl"><span class="kennzahl-label">Arbeitszeit</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.HeuteArbeitszeit) <span class="kennzahl-einheit">Std.</span></span></div>
+                <div class="kennzahl"><span class="kennzahl-label">Sollstunden</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.HeuteSoll) <span class="kennzahl-einheit">Std.</span></span></div>
+                <div class="kennzahl"><span class="kennzahl-label">Wegezeit (Kontostand)</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.Wegezeit) <span class="kennzahl-einheit">Std.</span></span></div>
+                <div class="kennzahl"><span class="kennzahl-label">Sonderarbeitszeit</span><span class="kennzahl-wert">@Zeitformat.Dauer(s.Sonderarbeitszeit) <span class="kennzahl-einheit">Std.</span></span></div>
+                <div class="kennzahl"><span class="kennzahl-label">Urlaubssaldo</span><span class="kennzahl-wert">@Zeitformat.Tage(u.Urlaubssaldo) <span class="kennzahl-einheit">Tage</span></span></div>
+                <div class="kennzahl"><span class="kennzahl-label">Resturlaub (Plan zum 31.12.)</span><span class="kennzahl-wert">@Zeitformat.Tage(u.ResturlaubPlan) <span class="kennzahl-einheit">Tage</span></span></div>
+            </div>
+            <p class="feld-hilfe">
+                Saldo minutenaktuell (Stand Vortag + heutige Arbeitszeit − heutiges Soll). Das Urlaubssaldo ist tagesaktuell – bereits genommener Urlaub ist abgezogen.
+                @if (u.Uebertrag > 0)
+                {
+                    <span>Resturlaub aus dem Vorjahr (@Zeitformat.Tage(u.Uebertrag) Tage) verfällt nach dem @Zeitformat.Datum(u.Verfall), wenn er nicht angetreten wird.</span>
+                }
+            </p>
+        </section>
+    }
 </div>
 
-@if (Model.Benachrichtigungen.Count > 0)
+@if (!mitTerminal && !Model.Zeigt(DashboardKacheln.Konten))
+{
+    <div class="hinweis">Ihr Dashboard ist leer. <a asp-page="/Einstellungen">Inhalte hinzufügen</a></div>
+}
+
+@if (Model.Zeigt(DashboardKacheln.Benachrichtigungen) && Model.Benachrichtigungen.Count > 0)
 {
     <section class="karte">
         <div class="karte-kopf">
