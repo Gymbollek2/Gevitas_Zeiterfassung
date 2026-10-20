@@ -1,0 +1,34 @@
+@page
+@model Gevitas.Zeiterfassung.Web.Pages.Account.PasswortAendernModel
+@{
+    ViewData["Title"] = "Passwort ändern";
+}
+<section class="karte" style="max-width: 520px">
+    @if (Model.Pflicht)
+    {
+        <div class="hinweis hinweis-warnung">Bitte vergeben Sie vor der weiteren Nutzung ein eigenes Passwort.</div>
+    }
+    <form method="post" class="formular">
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+
+        <label class="feld">
+            <span>Aktuelles Passwort</span>
+            <input asp-for="AltesPasswort" autocomplete="current-password" />
+            <span asp-validation-for="AltesPasswort" class="feld-fehler"></span>
+        </label>
+        <label class="feld">
+            <span>Neues Passwort</span>
+            <input asp-for="NeuesPasswort" autocomplete="new-password" />
+            <span class="feld-hilfe">Mindestens 8 Zeichen, Groß- und Kleinbuchstaben sowie eine Ziffer.</span>
+            <span asp-validation-for="NeuesPasswort" class="feld-fehler"></span>
+        </label>
+        <label class="feld">
+            <span>Neues Passwort wiederholen</span>
+            <input asp-for="Wiederholung" autocomplete="new-password" />
+            <span asp-validation-for="Wiederholung" class="feld-fehler"></span>
+        </label>
+        <div class="knopfleiste">
+            <button type="submit" class="knopf">Passwort ändern</button>
+        </div>
+    </form>
+</section>

@@ -1,0 +1,40 @@
+@page
+@model Gevitas.Zeiterfassung.Web.Pages.Account.AnmeldenModel
+@using Microsoft.Extensions.Options
+@inject IOptions<ZeiterfassungOptions> Einstellungen
+@{
+    ViewData["Title"] = "Anmeldung";
+}
+<div class="anmeldung-seite">
+    <section class="karte anmeldung-karte">
+        <div class="anmeldung-kopf">
+            <span class="marke-logo" aria-hidden="true">G</span>
+            <h2>@Einstellungen.Value.Anwendungsname</h2>
+            <p class="feld-hilfe">Bitte melden Sie sich mit Ihren Zugangsdaten an.</p>
+        </div>
+
+        <form method="post" class="formular">
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <label class="feld">
+                <span>Benutzername</span>
+                <input asp-for="Benutzername" autocomplete="username" autofocus />
+                <span asp-validation-for="Benutzername" class="feld-fehler"></span>
+            </label>
+
+            <label class="feld">
+                <span>Passwort</span>
+                <input asp-for="Passwort" autocomplete="current-password" />
+                <span asp-validation-for="Passwort" class="feld-fehler"></span>
+            </label>
+
+            <label class="checkbox">
+                <input asp-for="AngemeldetBleiben" />
+                Angemeldet bleiben
+            </label>
+
+            <button type="submit" class="knopf">Anmelden</button>
+        </form>
+    </section>
+</div>

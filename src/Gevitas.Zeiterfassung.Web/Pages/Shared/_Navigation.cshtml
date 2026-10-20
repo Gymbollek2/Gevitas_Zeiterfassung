@@ -1,4 +1,17 @@
 <nav class="navigation">
-    <a class="nav-link" asp-page="/Index"><svg class="icon"><use href="#i-dashboard" /></svg>Dashboard</a>
+    <a class="nav-link" href="/"><svg class="icon"><use href="#i-dashboard" /></svg>Dashboard</a>
+
+    <span class="nav-gruppe">Persönlich</span>
+    <a class="nav-link" asp-page="/MeineDaten"><svg class="icon"><use href="#i-person" /></svg>Meine Daten</a>
     <a class="nav-link" asp-page="/Information"><svg class="icon"><use href="#i-info" /></svg>Information</a>
+
+    @if (User.IstPersonal())
+    {
+        <span class="nav-gruppe">Verwaltung</span>
+        <a class="nav-link" asp-page="/Verwaltung/Mitarbeiter"><svg class="icon"><use href="#i-verwaltung" /></svg>Mitarbeitende</a>
+    }
+
+    <form method="post" asp-page="/Account/Abmelden" class="terminal-form">
+        <button type="submit" class="nav-link" style="background:none;border:0;width:100%;cursor:pointer;font:inherit"><svg class="icon"><use href="#i-abmelden" /></svg>Abmelden</button>
+    </form>
 </nav>

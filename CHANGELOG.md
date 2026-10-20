@@ -4,6 +4,17 @@ Alle wesentlichen Änderungen an diesem Projekt werden in dieser Datei dokumenti
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.2.0] – 2026-10-20
+
+### Hinzugefügt
+- Datenmodell mit Entity Framework Core und SQLite (Mitarbeitende, Zeitbuchungen, Abwesenheiten, Anträge, Konten, Protokolle)
+- Automatisches Anlegen der Datenbank und Abgleich der Abwesenheitsarten aus der `appsettings.json`
+- Anmeldung per Cookie-Authentifizierung mit PBKDF2-Passwort-Hashes und Rollen (Mitarbeiter, Führungskraft, Personal, Administrator)
+- Pflicht zur Passwortänderung bei Erstanmeldung, Passwortrichtlinie
+- Seite „Meine Daten“ und Mitarbeiterverwaltung inkl. Führungskraft und abweichendem Genehmiger
+- Sicherheits-Header (CSP, X-Frame-Options u. a.), persistente Data-Protection-Schlüssel
+- Demodaten für die Entwicklungsumgebung
+
 ## [0.1.0] – 2026-10-20
 
 ### Hinzugefügt

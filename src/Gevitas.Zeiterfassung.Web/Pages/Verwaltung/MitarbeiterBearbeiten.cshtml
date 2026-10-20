@@ -1,0 +1,76 @@
+@page "{id:int?}"
+@model Gevitas.Zeiterfassung.Web.Pages.Verwaltung.MitarbeiterBearbeitenModel
+@{
+    ViewData["Title"] = Model.IstNeu ? "Mitarbeiter anlegen" : "Mitarbeiter bearbeiten";
+}
+<section class="karte">
+    <form method="post" class="formular">
+        <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+        <input type="hidden" asp-for="Eingabe.Id" />
+
+        <h2>Stammdaten</h2>
+        <div class="formular-raster">
+            <label class="feld"><span>Personalnummer</span><input asp-for="Eingabe.Personalnummer" required /></label>
+            <label class="feld"><span>Benutzername</span><input asp-for="Eingabe.Benutzername" required autocomplete="off" /></label>
+            <label class="feld"><span>Vorname</span><input asp-for="Eingabe.Vorname" required /></label>
+            <label class="feld"><span>Nachname</span><input asp-for="Eingabe.Nachname" required /></label>
+            <label class="feld"><span>E-Mail</span><input asp-for="Eingabe.Email" type="email" /></label>
+            <label class="feld"><span>Abteilung</span><input asp-for="Eingabe.Abteilung" /></label>
+            <label class="feld">
+                <span>Rolle</span>
+                <select asp-for="Eingabe.Rolle">
+                    @foreach (var rolle in Enum.GetValues<Rolle>())
+                    {
+                        <option value="@rolle" selected="@(Model.Eingabe.Rolle == rolle)">@rolle.Text()</option>
+                    }
+                </select>
+            </label>
+            <label class="feld"><span>Eintrittsdatum</span><input asp-for="Eingabe.Eintrittsdatum" type="date" /></label>
+        </div>
+
+        <h2>Arbeitszeit &amp; Genehmigung</h2>
+        <div class="formular-raster">
+            <label class="feld">
+                <span>Sollarbeitszeit pro Tag (Std:Min)</span>
+                <input asp-for="Eingabe.SollProTag" placeholder="8:00" />
+            </label>
+            <label class="feld"><span>Jahresurlaub (Tage)</span><input asp-for="Eingabe.Jahresurlaub" type="number" min="0" max="60" /></label>
+            <label class="feld">
+                <span>Disziplinarische Führungskraft</span>
+                <select asp-for="Eingabe.VorgesetzterId">
+                    <option value="">– keine –</option>
+                    @foreach (var m in Model.Auswahl)
+                    {
+                        <option value="@m.Id" selected="@(Model.Eingabe.VorgesetzterId == m.Id)">@m.AnzeigeName</option>
+                    }
+                </select>
+            </label>
+            <label class="feld">
+                <span>Abweichender Genehmiger (Vertretung)</span>
+                <select asp-for="Eingabe.AbweichenderGenehmigerId">
+                    <option value="">– keiner –</option>
+                    @foreach (var m in Model.Auswahl)
+                    {
+                        <option value="@m.Id" selected="@(Model.Eingabe.AbweichenderGenehmigerId == m.Id)">@m.AnzeigeName</option>
+                    }
+                </select>
+                <span class="feld-hilfe">Wird statt der Führungskraft als Genehmiger verwendet.</span>
+            </label>
+        </div>
+
+        <h2>Zugang</h2>
+        <div class="formular-raster">
+            <label class="feld">
+                <span>@(Model.IstNeu ? "Startpasswort" : "Passwort zurücksetzen (optional)")</span>
+                <input asp-for="Eingabe.NeuesPasswort" type="password" autocomplete="new-password" />
+                <span class="feld-hilfe">Muss bei der nächsten Anmeldung geändert werden.</span>
+            </label>
+            <label class="checkbox"><input asp-for="Eingabe.Aktiv" type="checkbox" /> Zugang aktiv</label>
+        </div>
+
+        <div class="knopfleiste">
+            <button type="submit" class="knopf">Speichern</button>
+            <a class="knopf knopf-sekundaer" asp-page="/Verwaltung/Mitarbeiter">Abbrechen</a>
+        </div>
+    </form>
+</section>

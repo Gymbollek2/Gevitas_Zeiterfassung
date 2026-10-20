@@ -1,0 +1,55 @@
+@page
+@model Gevitas.Zeiterfassung.Web.Pages.Verwaltung.MitarbeiterModel
+@{
+    ViewData["Title"] = "Mitarbeiterverwaltung";
+}
+<section class="karte">
+    <div class="karte-kopf">
+        <h2><svg class="icon"><use href="#i-team" /></svg>Mitarbeitende</h2>
+        <a class="knopf" asp-page="/Verwaltung/MitarbeiterBearbeiten"><svg class="icon"><use href="#i-plus" /></svg>Neu anlegen</a>
+    </div>
+    <div class="tabellen-rahmen">
+        <table class="tabelle">
+            <thead>
+                <tr>
+                    <th>Pers.-Nr.</th>
+                    <th>Name</th>
+                    <th>Benutzer</th>
+                    <th>Rolle</th>
+                    <th>Führungskraft</th>
+                    <th class="zahl">Soll/Tag</th>
+                    <th class="zahl">Urlaub</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in Model.Liste)
+                {
+                    <tr>
+                        <td>@m.Personalnummer</td>
+                        <td>@m.AnzeigeName</td>
+                        <td>@m.Benutzername</td>
+                        <td>@m.Rolle.Text()</td>
+                        <td>@(m.Vorgesetzter?.AnzeigeName ?? "–")</td>
+                        <td class="zahl">@Zeitformat.Dauer(m.SollMinutenProTag)</td>
+                        <td class="zahl">@m.Jahresurlaub</td>
+                        <td>
+                            @if (m.Aktiv)
+                            {
+                                <span class="plakette plakette-gruen">Aktiv</span>
+                            }
+                            else
+                            {
+                                <span class="plakette plakette-grau">Inaktiv</span>
+                            }
+                        </td>
+                        <td class="aktionen">
+                            <a class="knopf knopf-sekundaer knopf-klein" asp-page="/Verwaltung/MitarbeiterBearbeiten" asp-route-id="@m.Id">Bearbeiten</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
